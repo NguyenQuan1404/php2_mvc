@@ -1,59 +1,61 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Quản trị Shop Giày')</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        .img-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
-    </style>
-</head>
-<body class="bg-light">
+@extends('layouts.master')
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="#">Shop Admin</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link {{ request()->is('products*') ? 'active' : '' }}" href="{{ route('products.index') }}">Sản phẩm</a></li>
-                <li class="nav-item"><a class="nav-link {{ request()->is('categories*') ? 'active' : '' }}" href="{{ route('categories.index') }}">Danh mục</a></li>
-                <li class="nav-item"><a class="nav-link {{ request()->is('brands*') ? 'active' : '' }}" href="{{ route('brands.index') }}">Thương hiệu</a></li>
-                <li class="nav-item"><a class="nav-link {{ request()->is('users*') ? 'active' : '' }}" href="{{ route('users.index') }}">Người dùng</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+@section('title', 'Trang chủ - Shop Giày Thể Thao')
 
-<div class="container">
-    <!-- Hiển thị thông báo thành công -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    <!-- Hiển thị lỗi -->
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+@section('content')
+<div class="row">
+    <!-- Sidebar Categories -->
+    <aside class="col-12 col-lg-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-semibold">Danh mục</div>
+            <div class="list-group list-group-flush">
+                <a href="#" class="list-group-item list-group-item-action active">Tất cả</a>
+                @foreach($categories as $cate)
+                    <a href="#" class="list-group-item list-group-item-action">
+                        {{ $cate['name'] }}
+                    </a>
                 @endforeach
-            </ul>
+            </div>
         </div>
-    @endif
+    </aside>
 
-    @yield('content')
+    <!-- Products Grid -->
+    <section class="col-12 col-lg-9">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h4 mb-0">Sản phẩm nổi bật</h1>
+        </div>
+
+        <div class="row g-3">
+            @forelse($products as $product)
+                <div class="col-12 col-sm-6 col-xl-4">
+                    <div class="card h-100 shadow-sm">
+                        @if($product['image'])
+                            <img src="/uploads/products/{{ $product['image'] }}" class="card-img-top" alt="{{ $product['name'] }}" style="height: 200px; object-fit: cover;">
+                        @else
+                            <img src="https://placehold.co/600x400?text=No+Image" class="card-img-top" alt="No Image">
+                        @endif
+                        
+                        <div class="card-body d-flex flex-column">
+                            <div class="mb-2">
+                                <h5 class="card-title mb-1 text-truncate" title="{{ $product['name'] }}">{{ $product['name'] }}</h5>
+                                <span class="badge text-bg-primary">{{ $product['category_name'] ?? 'Giày' }}</span>
+                            </div>
+                            <p class="card-text text-muted small mb-2 flex-grow-1">
+                                {{ $product['short_description'] ?? 'Mô tả đang cập nhật...' }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="fw-semibold text-danger">{{ number_format($product['price']) }}đ</div>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-12">
+                    <div class="alert alert-warning">Chưa có sản phẩm nào.</div>
+                </div>
+            @endforelse
+        </div>
+    </section>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function confirmDelete() {
-        return confirm('Bạn có chắc chắn muốn xóa không?');
-    }
-</script>
-</body>
-</html>
+@endsection
