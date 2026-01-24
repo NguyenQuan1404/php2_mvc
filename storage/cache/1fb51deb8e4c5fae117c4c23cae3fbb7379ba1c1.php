@@ -7,4 +7,4 @@
             <a class="text-decoration-none" href="#">Support</a>
         </div>
     </div>
-</footer>
+</footer><?php /**PATH C:\xampp\htdocs\php2lq\app\views/partials/client/footer.blade.php ENDPATH**/ ?>

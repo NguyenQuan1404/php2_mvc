@@ -1,8 +1,8 @@
-@extends('layouts.admin')
 
-@section('title', 'Quản lý Sản phẩm')
 
-@section('content')
+<?php $__env->startSection('title', 'Quản lý Sản phẩm'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div class="card shadow">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Quản lý Sản phẩm</h4>
@@ -27,52 +27,53 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($products as $p)
+                    <?php $__empty_1 = true; $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr>
-                        <td class="text-center">{{ $p['id'] }}</td>
+                        <td class="text-center"><?php echo e($p['id']); ?></td>
                         <td class="text-center">
-                            @if($p['image'])
-                                <img src="/uploads/products/{{ $p['image'] }}" class="img-thumb border">
-                            @else
+                            <?php if($p['image']): ?>
+                                <img src="/uploads/products/<?php echo e($p['image']); ?>" class="img-thumb border">
+                            <?php else: ?>
                                 <span class="badge bg-secondary">No Image</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
-                        <td class="fw-bold">{{ $p['name'] }}</td>
-                        <td>{{ $p['category_name'] }}</td>
-                        <td>{{ $p['brand_name'] }}</td>
+                        <td class="fw-bold"><?php echo e($p['name']); ?></td>
+                        <td><?php echo e($p['category_name']); ?></td>
+                        <td><?php echo e($p['brand_name']); ?></td>
                         <td>
-                            <span class="text-danger fw-bold">{{ number_format($p['price']) }}đ</span>
-                            @if($p['sale_price'] > 0)
-                                <br><small class="text-muted"><del>{{ number_format($p['sale_price']) }}đ</del></small>
-                            @endif
+                            <span class="text-danger fw-bold"><?php echo e(number_format($p['price'])); ?>đ</span>
+                            <?php if($p['sale_price'] > 0): ?>
+                                <br><small class="text-muted"><del><?php echo e(number_format($p['sale_price'])); ?>đ</del></small>
+                            <?php endif; ?>
                         </td>
-                        <td class="text-center">{{ $p['quantity'] }}</td>
+                        <td class="text-center"><?php echo e($p['quantity']); ?></td>
                         <td class="text-center">
-                            @if($p['status'])
+                            <?php if($p['status']): ?>
                                 <span class="badge bg-success">Hiện</span>
-                            @else
+                            <?php else: ?>
                                 <span class="badge bg-secondary">Ẩn</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
                         <td class="text-center">
-                            <a href="/product/edit/{{ $p['id'] }}" class="btn btn-warning btn-sm">
+                            <a href="/product/edit/<?php echo e($p['id']); ?>" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <form action="/product/delete/{{ $p['id'] }}" method="POST" class="d-inline" onsubmit="return confirmDelete();">
+                            <form action="/product/delete/<?php echo e($p['id']); ?>" method="POST" class="d-inline" onsubmit="return confirmDelete();">
                                 <button class="btn btn-danger btn-sm">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                         </td>
                     </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="9" class="text-center py-4">Chưa có dữ liệu sản phẩm.</td>
                     </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp\htdocs\php2lq\app\views/product/index.blade.php ENDPATH**/ ?>

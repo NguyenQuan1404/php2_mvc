@@ -6,25 +6,25 @@
     <hr class="border-secondary">
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item mb-1">
-            <a href="/dashboard" class="nav-link text-white {{ strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false ? 'active' : '' }}">
+            <a href="/dashboard" class="nav-link text-white <?php echo e(strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false ? 'active' : ''); ?>">
                 <i class="fa-solid fa-gauge me-3" style="width: 20px;"></i>
                 Tổng quan
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="/category/index" class="nav-link text-white {{ strpos($_SERVER['REQUEST_URI'], 'category') !== false ? 'active' : '' }}">
+            <a href="/category/index" class="nav-link text-white <?php echo e(strpos($_SERVER['REQUEST_URI'], 'category') !== false ? 'active' : ''); ?>">
                 <i class="fa-solid fa-layer-group me-3" style="width: 20px;"></i>
                 Danh mục
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="/product/index" class="nav-link text-white {{ strpos($_SERVER['REQUEST_URI'], 'product') !== false ? 'active' : '' }}">
+            <a href="/product/index" class="nav-link text-white <?php echo e(strpos($_SERVER['REQUEST_URI'], 'product') !== false ? 'active' : ''); ?>">
                 <i class="fa-solid fa-box-open me-3" style="width: 20px;"></i>
                 Sản phẩm
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="/brand/index" class="nav-link text-white {{ strpos($_SERVER['REQUEST_URI'], 'brands') !== false ? 'active' : '' }}">
+            <a href="/brand/index" class="nav-link text-white <?php echo e(strpos($_SERVER['REQUEST_URI'], 'brands') !== false ? 'active' : ''); ?>">
                 <i class="fa-solid fa-box-open me-3" style="width: 20px;"></i>
                 Thương hiệu
             </a>
@@ -46,4 +46,4 @@
     <div class="small text-white-50 px-2">
         &copy; 2024 MyShop System
     </div>
-</div>
+</div><?php /**PATH C:\xampp\htdocs\php2lq\app\views/partials/admin/sidebar.blade.php ENDPATH**/ ?>

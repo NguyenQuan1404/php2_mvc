@@ -10,4 +10,4 @@
             </div>
         </div>
     </div>
-</footer>
+</footer><?php /**PATH C:\xampp\htdocs\php2lq\app\views/partials/admin/footer.blade.php ENDPATH**/ ?>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Admin Dashboard')</title>
+    <title><?php echo $__env->yieldContent('title', 'Admin Dashboard'); ?></title>
 
     <!-- Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -100,7 +100,7 @@
         }
     </style>
 
-    @yield('styles')
+    <?php echo $__env->yieldContent('styles'); ?>
 </head>
 
 <body>
@@ -108,21 +108,21 @@
     <div class="admin-wrapper">
         <!-- 1. Sidebar -->
         <aside class="admin-sidebar" id="sidebarMenu">
-            @include('partials.admin.sidebar')
+            <?php echo $__env->make('partials.admin.sidebar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </aside>
 
         <!-- Main Content Wrapper -->
         <main class="admin-content">
             <!-- 2. Header -->
-            @include('partials.admin.header')
+            <?php echo $__env->make('partials.admin.header', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 
             <!-- Content Body -->
             <div class="container-fluid p-4 flex-grow-1">
-                @yield('content')
+                <?php echo $__env->yieldContent('content'); ?>
             </div>
 
             <!-- 3. Footer -->
-            @include('partials.admin.footer')
+            <?php echo $__env->make('partials.admin.footer', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </main>
     </div>
 
@@ -144,7 +144,7 @@
         });
     </script>
 
-    @yield('scripts')
+    <?php echo $__env->yieldContent('scripts'); ?>
 </body>
 
-</html>
+</html><?php /**PATH C:\xampp\htdocs\php2lq\app\views/layouts/admin.blade.php ENDPATH**/ ?>

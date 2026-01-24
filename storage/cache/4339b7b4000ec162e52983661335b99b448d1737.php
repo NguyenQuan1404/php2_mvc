@@ -30,4 +30,4 @@
             </form>
         </div>
     </div>
-</nav>
+</nav><?php /**PATH C:\xampp\htdocs\php2lq\app\views/partials/client/header.blade.php ENDPATH**/ ?>
