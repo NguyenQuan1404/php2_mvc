@@ -17,7 +17,8 @@
                         <div class="alert alert-danger small">{{ $error }}</div>
                     @endif
 
-                    <form action="/auth/register" method="POST">
+                    <!-- Action trỏ về handleRegister -->
+                    <form action="/auth/handleRegister" method="POST">
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Họ và tên</label>
                             <input type="text" name="fullname" class="form-control" value="{{ $fullname ?? '' }}" required placeholder="Ví dụ: Nguyễn Văn A">
@@ -26,6 +27,12 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Email</label>
                             <input type="email" name="email" class="form-control" value="{{ $email ?? '' }}" required placeholder="email@example.com">
+                        </div>
+                        
+                        <!-- Thêm số điện thoại cho khớp database User -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Số điện thoại</label>
+                            <input type="text" name="phone" class="form-control" required placeholder="Số điện thoại của bạn">
                         </div>
 
                         <div class="row">

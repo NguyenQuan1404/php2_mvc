@@ -21,7 +21,8 @@
                         <div class="alert alert-danger small">{{ $error }}</div>
                     @endif
 
-                    <form action="/auth/login" method="POST">
+                    <!-- Action trỏ về handleLogin -->
+                    <form action="/auth/handleLogin" method="POST">
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Email</label>
                             <input type="email" name="email" class="form-control" value="{{ $email ?? '' }}" required placeholder="Nhập email...">
@@ -30,7 +31,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between">
                                 <label class="form-label fw-bold small">Mật khẩu</label>
-                                <a href="/auth/forgot-password" class="small text-decoration-none text-success">Quên mật khẩu?</a>
+                                <a href="/auth/forgotPassword" class="small text-decoration-none text-success">Quên mật khẩu?</a>
                             </div>
                             <input type="password" name="password" class="form-control" required placeholder="Nhập mật khẩu...">
                         </div>

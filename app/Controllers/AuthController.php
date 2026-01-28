@@ -1,24 +1,19 @@
 <?php
-
-namespace App\Controllers;
-
-use App\Core\Controller;
-use App\Models\LoginClient; // Sử dụng đúng Model bạn yêu cầu
+// Không dùng namespace để router có thể new AuthController() trực tiếp
+// use App\Core\Controller; // Core/Controller.php đã được autoload
 
 class AuthController extends Controller
 {
-    private $loginClientModel;
-
-    public function __construct()
-    {
-        $this->loginClientModel = new LoginClient();
-    }
-
     // --- ĐĂNG NHẬP ---
     public function login()
     {
+        // Nếu đã đăng nhập thì đá về trang chủ hoặc dashboard
         if (isset($_SESSION['user'])) {
-            header('Location: /');
+            if ($_SESSION['user']['role'] == 1) {
+                header('Location: /dashboard');
+            } else {
+                header('Location: /');
+            }
             exit;
         }
         $this->view('auth.login');
@@ -30,7 +25,9 @@ class AuthController extends Controller
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
 
-            $user = $this->loginClientModel->authenticate($email, $password);
+            // Gọi model UserClient theo yêu cầu
+            $userModel = $this->model('UserClient');
+            $user = $userModel->authenticate($email, $password);
 
             if ($user) {
                 // Lưu session
@@ -39,7 +36,7 @@ class AuthController extends Controller
                     'fullname' => $user['fullname'],
                     'email' => $user['email'],
                     'role' => $user['role'], 
-                    'avatar' => $user['avatar'] ?? null
+                    'phone' => $user['phone']
                 ];
 
                 // Phân quyền chuyển hướng
@@ -53,6 +50,10 @@ class AuthController extends Controller
                 $error = "Email hoặc mật khẩu không đúng!";
                 $this->view('auth.login', ['error' => $error, 'email' => $email]);
             }
+        } else {
+            // Nếu truy cập trực tiếp bằng GET thì về lại trang login
+            header('Location: /auth/login');
+            exit;
         }
     }
 
@@ -69,11 +70,13 @@ class AuthController extends Controller
     public function handleRegister()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $fullname = $_POST['fullname'];
-            $email = $_POST['email'];
-            $password = $_POST['password'];
-            $confirm_password = $_POST['confirm_password'];
+            $fullname = $_POST['fullname'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
+            $phone = $_POST['phone'] ?? ''; 
 
+            // Validate cơ bản
             if ($password !== $confirm_password) {
                 $this->view('auth.register', [
                     'error' => 'Mật khẩu xác nhận không khớp!', 
@@ -83,8 +86,10 @@ class AuthController extends Controller
                 return;
             }
 
+            $userModel = $this->model('UserClient');
+
             // Check email tồn tại
-            if ($this->loginClientModel->findByEmail($email)) {
+            if ($userModel->findByEmail($email)) {
                 $this->view('auth.register', [
                     'error' => 'Email này đã được sử dụng!', 
                     'fullname' => $fullname
@@ -92,15 +97,17 @@ class AuthController extends Controller
                 return;
             }
 
+            // Tạo user mới
             $data = [
                 'fullname' => $fullname,
                 'email' => $email,
                 'password' => password_hash($password, PASSWORD_DEFAULT),
-                'role' => 0, // Mặc định User
-                'status' => 1
+                'phone' => $phone,
+                'address' => '',
+                'role' => 0 // Mặc định User thường
             ];
 
-            if ($this->loginClientModel->create($data)) {
+            if ($userModel->create($data)) {
                 header('Location: /auth/login?msg=registered');
                 exit;
             } else {
@@ -118,11 +125,12 @@ class AuthController extends Controller
     public function handleForgotPassword()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = $_POST['email'];
-            $user = $this->loginClientModel->findByEmail($email);
+            $email = $_POST['email'] ?? '';
+            $userModel = $this->model('UserClient');
+            $user = $userModel->findByEmail($email);
 
             if ($user) {
-                $success = "Link khôi phục mật khẩu đã được gửi đến email của bạn!";
+                $success = "Nếu email tồn tại, chúng tôi đã gửi link khôi phục mật khẩu vào hòm thư của bạn!";
                 $this->view('auth.forgot', ['success' => $success]);
             } else {
                 $this->view('auth.forgot', ['error' => 'Email không tồn tại trong hệ thống!']);
@@ -133,9 +141,12 @@ class AuthController extends Controller
     // --- ĐĂNG XUẤT ---
     public function logout()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         unset($_SESSION['user']);
         session_destroy();
-        header('Location: /');
+        header('Location: /auth/login');
         exit;
     }
 }

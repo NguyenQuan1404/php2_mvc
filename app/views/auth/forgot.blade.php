@@ -20,7 +20,8 @@
                         <div class="alert alert-danger small">{{ $error }}</div>
                     @endif
 
-                    <form action="/auth/forgot-password" method="POST">
+                    <!-- Action trỏ về handleForgotPassword -->
+                    <form action="/auth/handleForgotPassword" method="POST">
                         <div class="mb-3 text-start">
                             <label class="form-label fw-bold small">Email đăng ký</label>
                             <input type="email" name="email" class="form-control" required placeholder="nhapemail@example.com">
