@@ -1,4 +1,4 @@
-<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark admin-sidebar-inner" style="width: 260px; height: 100vh;">
+<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark admin-sidebar-inner" style="width: 260px; min-height: 100vh;">
     <a href="/dashboard" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-2 brand-logo">
         <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
             <i class="fa-solid fa-shoe-prints fa-lg"></i>
@@ -39,6 +39,12 @@
                 Sản phẩm
             </a>
         </li>
+        <li class="nav-item mb-1">
+            <a href="/coupon" class="nav-link text-white {{ strpos($currentUri, '/coupon') !== false ? 'active' : '' }}">
+                <i class="fa-solid fa-ticket me-3 icon-width"></i>
+                Quản lý Coupon
+            </a>
+        </li>
 
         <li class="nav-header text-uppercase text-white-50 fw-bold fs-7 mt-3 mb-2 px-3">Hệ thống</li>
 
@@ -66,7 +72,7 @@
             <li><a class="dropdown-item" href="/">Về trang chủ Shop</a></li>
             <li><a class="dropdown-item" href="#">Cài đặt</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Đăng xuất</a></li>
+            <li><a class="dropdown-item" href="/logout">Đăng xuất</a></li>
         </ul>
     </div>
 </div>
