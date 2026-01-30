@@ -1,76 +1,48 @@
 <?php
+
+namespace App\Models;
+
+use App\Core\Model;
+
 class UserClient extends Model
 {
-    private $table = 'users';
-
-    public function index()
-    {
-        $sql = "SELECT * FROM $this->table ORDER BY id DESC";
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    // Giả sử tên bảng là 'users', hãy đổi lại nếu bảng của bạn tên khác
+    protected $table = 'users'; 
 
     public function create($data)
     {
-        // Mặc định role là 0 (User) nếu không truyền vào
-        $role = $data['role'] ?? 0;
-        
-        $sql = "INSERT INTO $this->table (fullname, email, password, phone, address, role) 
-                VALUES (:fullname, :email, :password, :phone, :address, :role)";
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            'fullname' => $data['fullname'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'phone' => $data['phone'] ?? null,
-            'address' => $data['address'] ?? null,
-            'role' => $role
-        ]);
+        return $this->insert($data);
     }
 
-    public function findByEmail($email) {
-        $sql = "SELECT * FROM $this->table WHERE email = :email";
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['email' => $email]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    // Hàm xác thực đăng nhập
-    public function authenticate($email, $password)
+    public function findByEmail($email)
     {
-        $user = $this->findByEmail($email);
-        
-        if ($user && password_verify($password, $user['password'])) {
-            return $user;
-        }
-        
-        return false;
+        // Giả sử cột email tên là 'email'
+        $sql = "SELECT * FROM {$this->table} WHERE email = ? LIMIT 1";
+        return $this->query($sql, [$email])->fetch(); // Giả sử method query trả về statement
     }
 
-    public function update($id, $data)
+    // Lưu token reset password
+    public function saveResetToken($email, $token)
     {
-        $passSql = !empty($data['password']) ? ", password = :password" : "";
+        // Token hết hạn sau 30 phút
+        $expire = date('Y-m-d H:i:s', time() + 1800); 
         
-        $sql = "UPDATE $this->table SET 
-                fullname = :fullname, 
-                phone = :phone, 
-                address = :address, 
-                role = :role 
-                $passSql
-                WHERE id = :id";
-                
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        
-        $data['id'] = $id;
-        if (empty($data['password'])) {
-            unset($data['password']); 
-        }
-        
-        return $stmt->execute($data);
+        $sql = "UPDATE {$this->table} SET reset_token = ?, reset_token_expire = ? WHERE email = ?";
+        return $this->query($sql, [$token, $expire, $email]);
+    }
+
+    // Kiểm tra token có hợp lệ không
+    public function verifyToken($token)
+    {
+        $now = date('Y-m-d H:i:s');
+        $sql = "SELECT * FROM {$this->table} WHERE reset_token = ? AND reset_token_expire > ? LIMIT 1";
+        return $this->query($sql, [$token, $now])->fetch();
+    }
+
+    // Cập nhật mật khẩu mới và xóa token
+    public function updateNewPassword($email, $newPasswordHash)
+    {
+        $sql = "UPDATE {$this->table} SET password = ?, reset_token = NULL, reset_token_expire = NULL WHERE email = ?";
+        return $this->query($sql, [$newPasswordHash, $email]);
     }
 }
