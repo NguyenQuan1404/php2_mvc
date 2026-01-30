@@ -1,160 +1,219 @@
 <?php
+// Không dùng namespace để router có thể new AuthController() trực tiếp
+// use App\Core\Controller; // Core/Controller.php đã được autoload
+$pathMailer =realpath(__DIR__ ."/../Services/Mailler.php");
+require_once $pathMailer;
 
-namespace App\Controllers;
-
-use App\Core\Controller;
-use App\Models\UserClient;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
 class AuthController extends Controller
 {
-    private $userModel;
-
-    public function __construct()
-    {
-        $this->userModel = new UserClient();
-    }
-
-    public function index()
-    {
-        $this->login();
-    }
-
+    // --- ĐĂNG NHẬP ---
     public function login()
     {
-        // Dự án dùng file .blade.php và có cache => Dùng dấu chấm
+        if (isset($_SESSION['user'])) {
+            if ($_SESSION['user']['role'] == 1) {
+                header('Location: /dashboard');
+            } else {
+                header('Location: /');
+            }
+            exit;
+        }
         $this->view('auth.login');
     }
 
+    public function handleLogin()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+
+            $userModel = $this->model('UserClient');
+            $user = $userModel->authenticate($email, $password);
+
+            if ($user) {
+                $_SESSION['user'] = [
+                    'id' => $user['id'],
+                    'fullname' => $user['fullname'],
+                    'email' => $user['email'],
+                    'role' => $user['role'],
+                    'phone' => $user['phone']
+                ];
+
+                if ($user['role'] == 1) {
+                    header('Location: /dashboard');
+                } else {
+                    header('Location: /');
+                }
+                exit;
+            } else {
+                $error = "Email hoặc mật khẩu không đúng!";
+                $this->view('auth.login', ['error' => $error, 'email' => $email]);
+            }
+        } else {
+            header('Location: /auth/login');
+            exit;
+        }
+    }
+
+    // --- ĐĂNG KÝ ---
     public function register()
     {
+        if (isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
         $this->view('auth.register');
     }
 
-    // --- CHỨC NĂNG QUÊN MẬT KHẨU ---
-
-    public function forgot()
+    public function handleRegister()
     {
-        // View: app/views/auth/forgot.blade.php
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $fullname = $_POST['fullname'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
+            $phone = $_POST['phone'] ?? '';
+
+            if ($password !== $confirm_password) {
+                $this->view('auth.register', [
+                    'error' => 'Mật khẩu xác nhận không khớp!',
+                    'fullname' => $fullname,
+                    'email' => $email
+                ]);
+                return;
+            }
+
+            $userModel = $this->model('UserClient');
+
+            if ($userModel->findByEmail($email)) {
+                $this->view('auth.register', [
+                    'error' => 'Email này đã được sử dụng!',
+                    'fullname' => $fullname
+                ]);
+                return;
+            }
+
+            $data = [
+                'fullname' => $fullname,
+                'email' => $email,
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'phone' => $phone,
+                'address' => '',
+                'role' => 0
+            ];
+
+            if ($userModel->create($data)) {
+                header('Location: /auth/login?msg=registered');
+                exit;
+            } else {
+                $this->view('auth.register', ['error' => 'Lỗi hệ thống, vui lòng thử lại sau!']);
+            }
+        }
+    }
+
+    // --- QUÊN MẬT KHẨU (Bước 1: Nhập email) ---
+    public function forgotPassword()
+    {
         $this->view('auth.forgot');
     }
 
-    public function sendReset()
+    public function handleForgotPassword()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /auth/forgot');
-            exit;
-        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_POST['email'] ?? '';
+            $userModel = $this->model('UserClient');
+            $user = $userModel->findByEmail($email);
 
-        $email = $_POST['email'] ?? '';
+            if ($user) {
+                // 1. Tạo OTP 6 số ngẫu nhiên
+                $otp = rand(100000, 999999);
+                
+                // 2. Lưu OTP vào DB
+                $userModel->saveResetToken($email, $otp);
 
-        if (empty($email)) {
-            $_SESSION['error'] = 'Vui lòng nhập email.';
-            header('Location: /auth/forgot');
-            exit;
-        }
+                // 3. Gửi OTP qua mail
+                $subject = "Mã OTP xác thực quên mật khẩu";
+                $body = "
+                    <h3>Chào {$user['fullname']},</h3>
+                    <p>Mã xác thực (OTP) để đặt lại mật khẩu của bạn là:</p>
+                    <h2 style='color: #d9534f; letter-spacing: 5px;'>$otp</h2>
+                    <p>Mã này có hiệu lực trong 15 phút. Tuyệt đối không chia sẻ mã này cho ai khác.</p>
+                ";
 
-        $user = $this->userModel->findByEmail($email);
+                Mailler::send($email, $subject, $body);
 
-        if ($user) {
-            $token = bin2hex(random_bytes(32));
-            $this->userModel->saveResetToken($email, $token);
-
-            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-            $host = $_SERVER['HTTP_HOST'];
-            $link = "$protocol://$host/auth/reset?token=" . $token . "&email=" . urlencode($email);
-
-            $sent = $this->sendEmail($email, $user['name'] ?? 'Khách hàng', $link);
-
-            if ($sent) {
-                $_SESSION['success'] = 'Link đặt lại mật khẩu đã được gửi vào email.';
+                // 4. Chuyển hướng sang trang nhập OTP, truyền email qua URL
+                $_SESSION['success'] = "Đã gửi mã OTP vào email. Vui lòng kiểm tra và nhập mã bên dưới.";
+                header("Location: /auth/resetPassword?email=$email");
+                exit;
             } else {
-                $_SESSION['error'] = 'Lỗi gửi mail. Vui lòng thử lại sau.';
+                $_SESSION['error'] = 'Email không tồn tại trong hệ thống!';
+                header('Location: /auth/forgotPassword');
+                exit;
             }
-        } else {
-            $_SESSION['error'] = 'Email này chưa được đăng ký.';
         }
-
-        header('Location: /auth/forgot');
-        exit;
     }
 
-    public function reset()
+    // --- ĐẶT LẠI MẬT KHẨU (Bước 2: Nhập OTP & Pass mới) ---
+    public function resetPassword()
     {
-        $token = $_GET['token'] ?? '';
+        // Lấy email từ URL để điền sẵn vào form (hoặc input hidden)
         $email = $_GET['email'] ?? '';
-
-        $user = $this->userModel->verifyToken($token);
-
-        // Kiểm tra user tồn tại và email khớp
-        if (!$user || (is_array($user) ? $user['email'] : $user->email) !== $email) {
-            $_SESSION['error'] = 'Link không hợp lệ hoặc đã hết hạn.';
-            header('Location: /auth/login');
-            exit;
-        }
-
-        // View: app/views/auth/reset.blade.php
-        $this->view('auth.reset', ['token' => $token, 'email' => $email]);
+        
+        // Hiển thị form nhập OTP và pass mới
+        $this->view('auth.reset', [
+            'email' => $email
+        ]);
     }
 
+    // --- XỬ LÝ CẬP NHẬT (Bước 3: Validate & Update) ---
     public function updatePassword()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /auth/login');
-            exit;
-        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_POST['email'] ?? '';
+            $otp = $_POST['otp'] ?? ''; // Lấy OTP người dùng nhập
+            $password = $_POST['password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
 
-        $token = $_POST['token'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
+            // 1. Validate mật khẩu
+            if ($password !== $confirm_password) {
+                $_SESSION['error'] = "Mật khẩu xác nhận không khớp!";
+                header("Location: /auth/resetPassword?email=$email");
+                exit;
+            }
 
-        if ($password !== $confirmPassword) {
-            $_SESSION['error'] = 'Mật khẩu xác nhận không khớp.';
-            header("Location: /auth/reset?token=$token&email=$email");
-            exit;
-        }
+            // 2. Kiểm tra OTP
+            $userModel = $this->model('UserClient');
+            $user = $userModel->checkUserOtp($email, $otp); // Hàm mới check cả email + otp
 
-        $user = $this->userModel->verifyToken($token);
+            if (!$user) {
+                $_SESSION['error'] = "Mã OTP không đúng hoặc đã hết hạn!";
+                header("Location: /auth/resetPassword?email=$email");
+                exit;
+            }
 
-        if ($user) {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $this->userModel->updateNewPassword($email, $hashedPassword);
-
-            $_SESSION['success'] = 'Đổi mật khẩu thành công. Vui lòng đăng nhập.';
-            header('Location: /auth/login');
-        } else {
-            $_SESSION['error'] = 'Phiên làm việc hết hạn.';
-            header('Location: /auth/forgot');
+            // 3. Đổi mật khẩu
+            if ($userModel->resetPassword($email, $password)) {
+                $_SESSION['success'] = "Đặt lại mật khẩu thành công! Hãy đăng nhập ngay.";
+                header('Location: /auth/login');
+                exit;
+            } else {
+                $_SESSION['error'] = "Lỗi hệ thống, vui lòng thử lại!";
+                header("Location: /auth/resetPassword?email=$email");
+                exit;
+            }
         }
     }
 
-    private function sendEmail($to, $name, $link)
+    // --- ĐĂNG XUẤT ---
+    public function logout()
     {
-        // Nếu dòng dưới đây báo đỏ, bạn cần chạy: composer require phpmailer/phpmailer
-        $mail = new PHPMailer(true);
-        try {
-            $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com'; 
-            $mail->SMTPAuth   = true;
-            $mail->Username   = 'quannlpk04078@gmail.com'; // Thay email của bạn
-            $mail->Password   = 'hirv rdau aryy kckz';    // Thay mật khẩu ứng dụng
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
-            $mail->CharSet    = 'UTF-8';
-
-            $mail->setFrom('no-reply@shop.com', 'Shop Admin');
-            $mail->addAddress($to, $name);
-
-            $mail->isHTML(true);
-            $mail->Subject = 'Yêu cầu đặt lại mật khẩu';
-            $mail->Body    = "Click vào đây để đổi mật khẩu: <a href='$link'>$link</a>";
-
-            $mail->send();
-            return true;
-        } catch (Exception $e) {
-            return false;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
+        unset($_SESSION['user']);
+        session_destroy();
+        header('Location: /auth/login');
+        exit;
     }
 }

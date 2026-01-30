@@ -21,7 +21,7 @@
                         <div class="alert alert-danger small">{{ $error }}</div>
                     @endif
 
-                    <!-- Action trỏ về handleLogin -->
+                   
                     <form action="/auth/handleLogin" method="POST">
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Email</label>

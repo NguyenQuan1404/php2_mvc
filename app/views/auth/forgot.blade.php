@@ -24,7 +24,7 @@
                     <?php endif; ?>
 
                     <!-- Action trỏ về AuthController -> hàm sendReset -->
-                    <form action="/auth/sendReset" method="POST">
+                    <form action="/auth/handleForgotPassword" method="POST">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email đăng ký</label>
                             <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com">
