@@ -75,7 +75,6 @@
                             </ul>
                         </div>
                     @else
-                        <!-- Login / Register Buttons -->
                         <div class="d-flex gap-2">
                             <a href="/auth/login" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold">Đăng nhập</a>
                             <a href="/auth/register" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold">Đăng ký</a>
