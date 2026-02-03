@@ -55,6 +55,10 @@
 
                     <!-- Account Actions (Login/Register or User Menu) -->
                     @if(isset($_SESSION['user']))
+                        
+                        {{-- Lấy role ra để dùng cho logic bên dưới --}}
+                        @php $role = $_SESSION['user']['role'] ?? ''; @endphp
+
                         <!-- Dropdown User -->
                         <div class="dropdown">
                             <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -64,10 +68,13 @@
                                 <span class="d-none d-sm-inline fw-semibold small">{{ $_SESSION['user']['fullname'] }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userDropdown">
-                                @if($_SESSION['user']['role'] == 1)
-                                    <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2 text-warning"></i>Quản trị</a></li>
+                                
+                                {{-- CHỈ HIỆN TRONG MENU DROPDOWN --}}
+                                @if($role == 1 || $role === 'admin')
+                                    <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2 text-warning"></i>Trang quản trị</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                 @endif
+                                
                                 <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2 text-muted"></i>Hồ sơ cá nhân</a></li>
                                 <li><a class="dropdown-item" href="/orders"><i class="fas fa-box-open me-2 text-muted"></i>Đơn hàng</a></li>
                                 <li><hr class="dropdown-divider"></li>
