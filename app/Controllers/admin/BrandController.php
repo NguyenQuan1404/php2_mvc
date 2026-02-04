@@ -1,4 +1,7 @@
 <?php
+namespace App\Controllers\Admin;
+
+use Controller;
 class BrandController extends Controller
 {
     public function index()

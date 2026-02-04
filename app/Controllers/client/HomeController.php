@@ -1,4 +1,6 @@
 <?php
+namespace App\Controllers\Client;
+use Controller; 
 class HomeController extends Controller
 {
     public function index()

@@ -1,4 +1,6 @@
 <?php
+namespace App\Controllers\Admin;
+use Controller; 
 class DashboardController extends Controller
 {
     public function index()

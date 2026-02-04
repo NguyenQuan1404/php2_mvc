@@ -1,7 +1,7 @@
 <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark admin-sidebar-inner" style="width: 260px; min-height: 100vh;">
-    <a href="/dashboard" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-2 brand-logo">
+    <a href="/admin/dashboard" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none px-2 brand-logo">
         <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-            <i class="fa-solid fa-shoe-prints fa-lg"></i>
+            <i class="fas fa-shoe-prints fa-lg"></i>
         </div>
         <span class="fs-4 fw-bold tracking-tight">Admin<span class="text-primary">Panel</span></span>
     </a>
@@ -10,53 +10,57 @@
     <ul class="nav nav-pills flex-column mb-auto">
         @php
             $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+            // Helper check active đơn giản
+            $isActive = function($path) use ($currentUri) {
+                return strpos($currentUri, $path) !== false ? 'active' : '';
+            };
         @endphp
 
         <li class="nav-item mb-2">
-            <a href="/dashboard" class="nav-link text-white {{ (strpos($currentUri, '/dashboard') !== false || $currentUri == '/admin') ? 'active' : '' }}">
-                <i class="fa-solid fa-gauge-high me-3 icon-width"></i>
+            <a href="/admin/dashboard" class="nav-link text-white {{ ($isActive('/admin/dashboard') || $currentUri == '/admin') ? 'active' : '' }}">
+                <i class="fas fa-tachometer-alt me-3 icon-width"></i>
                 Tổng quan
             </a>
         </li>
         
-        <li class="nav-header text-uppercase text-white-50 fw-bold fs-7 mt-3 mb-2 px-3">Quản lý Kho</li>
+        <li class="nav-header text-uppercase text-muted fs-7 fw-bold mt-4 mb-2 ps-2">Quản lý sản phẩm</li>
 
         <li class="nav-item mb-1">
-            <a href="/category" class="nav-link text-white {{ strpos($currentUri, '/category') !== false ? 'active' : '' }}">
-                <i class="fa-solid fa-layer-group me-3 icon-width"></i>
-                Danh mục (Đế giày)
+            <a href="/admin/category" class="nav-link text-white {{ $isActive('/admin/category') }}">
+                <i class="fas fa-layer-group me-3 icon-width"></i>
+                Danh mục (Category)
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="/brand" class="nav-link text-white {{ strpos($currentUri, '/brand') !== false ? 'active' : '' }}">
-                <i class="fa-solid fa-copyright me-3 icon-width"></i>
-                Thương hiệu
+            <a href="/admin/brand" class="nav-link text-white {{ $isActive('/admin/brand') }}">
+                <i class="fas fa-copyright me-3 icon-width"></i>
+                Thương hiệu (Brand)
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="/product" class="nav-link text-white {{ strpos($currentUri, '/product') !== false ? 'active' : '' }}">
-                <i class="fa-solid fa-box-open me-3 icon-width"></i>
-                Sản phẩm
+            <a href="/admin/product" class="nav-link text-white {{ $isActive('/admin/product') }}">
+                <i class="fas fa-box-open me-3 icon-width"></i>
+                Sản phẩm (Products)
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="/coupon" class="nav-link text-white {{ strpos($currentUri, '/coupon') !== false ? 'active' : '' }}">
-                <i class="fa-solid fa-ticket me-3 icon-width"></i>
-                Quản lý Coupon
+            <a href="/admin/coupon" class="nav-link text-white {{ $isActive('/admin/coupon') }}">
+                <i class="fas fa-ticket-alt me-3 icon-width"></i>
+                Mã giảm giá (Coupon)
             </a>
         </li>
 
-        <li class="nav-header text-uppercase text-white-50 fw-bold fs-7 mt-3 mb-2 px-3">Hệ thống</li>
+        <li class="nav-header text-uppercase text-muted fs-7 fw-bold mt-4 mb-2 ps-2">Hệ thống</li>
 
         <li class="nav-item mb-1">
-            <a href="/user" class="nav-link text-white {{ strpos($currentUri, '/user') !== false ? 'active' : '' }}">
-                <i class="fa-solid fa-users-gear me-3 icon-width"></i>
+            <a href="/admin/user" class="nav-link text-white {{ $isActive('/admin/user') }}">
+                <i class="fas fa-users-cog me-3 icon-width"></i>
                 Người dùng (User)
             </a>
         </li>
         <li class="nav-item mb-1">
             <a href="#" class="nav-link text-white">
-                <i class="fa-solid fa-file-invoice-dollar me-3 icon-width"></i>
+                <i class="fas fa-file-invoice-dollar me-3 icon-width"></i>
                 Đơn hàng <span class="badge bg-danger ms-auto rounded-pill" style="font-size: 0.7em;">Soon</span>
             </a>
         </li>
@@ -71,8 +75,9 @@
         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
             <li><a class="dropdown-item" href="/">Về trang chủ Shop</a></li>
             <li><a class="dropdown-item" href="#">Cài đặt</a></li>
+            <li><a class="dropdown-item" href="#">Hồ sơ</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/logout">Đăng xuất</a></li>
+            <li><a class="dropdown-item text-danger" href="/auth/logout">Đăng xuất</a></li>
         </ul>
     </div>
 </div>

@@ -1,4 +1,7 @@
 <?php
+namespace App\Controllers\Admin;
+
+use Controller;
 class UserController extends Controller
 {
     public function index()

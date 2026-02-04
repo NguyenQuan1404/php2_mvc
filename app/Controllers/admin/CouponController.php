@@ -1,10 +1,13 @@
 <?php
+namespace App\Controllers\Admin;
+
+use Controller;
 class CouponController extends Controller
 {
     public function index()
     {
         $coupons = $this->model('Coupon')->getAll();
-        $this->view('coupon/index', [
+        $this->view('/adminviews/coupon/index', [
             'coupons' => $coupons,
             'title' => 'Quản lý Mã giảm giá'
         ]);
