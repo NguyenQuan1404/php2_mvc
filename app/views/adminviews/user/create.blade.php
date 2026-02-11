@@ -8,7 +8,8 @@
         <h4 class="mb-0">Thêm Người dùng mới</h4>
     </div>
     <div class="card-body p-4">
-        <form action="/user/store" method="POST">
+        {{-- ACTION: /admin/user/store --}}
+        <form action="/admin/user/store" method="POST">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Họ tên</label>
@@ -47,7 +48,8 @@
                 <button type="submit" class="btn btn-info text-white">
                     <i class="bi bi-save"></i> Lưu User
                 </button>
-                <a href="/user" class="btn btn-secondary">Hủy</a>
+                {{-- LINK: /admin/user --}}
+                <a href="/admin/user" class="btn btn-secondary">Hủy</a>
             </div>
         </form>
     </div>

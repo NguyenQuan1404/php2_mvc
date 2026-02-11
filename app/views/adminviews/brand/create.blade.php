@@ -8,7 +8,8 @@
         <h4 class="mb-0">Thêm Thương hiệu mới</h4>
     </div>
     <div class="card-body p-4">
-        <form action="/brand/store" method="POST">
+        {{-- SỬA ACTION: /admin/brand/store --}}
+        <form action="/admin/brand/store" method="POST">
             <div class="mb-3">
                 <label class="form-label fw-bold">Tên Thương hiệu</label>
                 <input type="text" class="form-control" name="name" required placeholder="Ví dụ: Nike, Adidas...">
@@ -22,7 +23,8 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-save"></i> Lưu
                 </button>
-                <a href="/brand" class="btn btn-secondary">Hủy</a>
+                {{-- SỬA LINK HỦY: /admin/brand --}}
+                <a href="/admin/brand" class="btn btn-secondary">Hủy</a>
             </div>
         </form>
     </div>

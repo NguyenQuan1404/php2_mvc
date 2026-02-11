@@ -3,7 +3,8 @@ class Coupon extends Model
 {
     private $table = 'coupons';
 
-    public function getAll()
+    // Đổi tên thành index cho đồng bộ với các Model khác
+    public function index()
     {
         $sql = "SELECT * FROM $this->table ORDER BY id DESC";
         $conn = $this->connect();
@@ -20,7 +21,7 @@ class Coupon extends Model
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
-            'code' => strtoupper($data['code']), // Tự động viết hoa mã
+            'code' => $data['code'],
             'type' => $data['type'],
             'value' => $data['value'],
             'min_order_value' => $data['min_order_value'],
@@ -29,6 +30,16 @@ class Coupon extends Model
             'end_date' => $data['end_date'],
             'status' => $data['status']
         ]);
+    }
+
+    // Thêm hàm show để lấy 1 dòng
+    public function show($id)
+    {
+        $sql = "SELECT * FROM $this->table WHERE id = :id";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function update($id, $data)
@@ -48,7 +59,7 @@ class Coupon extends Model
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
             'id' => $id,
-            'code' => strtoupper($data['code']),
+            'code' => $data['code'],
             'type' => $data['type'],
             'value' => $data['value'],
             'min_order_value' => $data['min_order_value'],
@@ -67,7 +78,6 @@ class Coupon extends Model
         return $stmt->execute(['id' => $id]);
     }
 
-    // Hàm kiểm tra mã tồn tại (trừ chính nó khi update)
     public function checkCodeExists($code, $excludeId = null) {
         $sql = "SELECT COUNT(*) as count FROM $this->table WHERE code = :code";
         if ($excludeId) {

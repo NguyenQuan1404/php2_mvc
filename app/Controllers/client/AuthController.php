@@ -3,10 +3,8 @@ namespace App\Controllers\Client;
 
 use Controller;
 
-// SỬA LỖI: Đường dẫn Mailler phải đi ra 2 cấp (../../)
-// __DIR__ đang là: .../app/Controllers/Client
+// Đường dẫn file Mailer
 $pathMailer = __DIR__ . '/../../Services/Mailler.php';
-
 if (file_exists($pathMailer)) {
     require_once $pathMailer;
 }
@@ -17,8 +15,7 @@ class AuthController extends Controller
     public function login()
     {
         if (isset($_SESSION['user'])) {
-            // Kiểm tra role: 1 hoặc 'admin' đều vào dashboard
-            $role = $_SESSION['user']['role'] ?? '';
+            $role = $_SESSION['user']['role'] ?? 0;
             if ($role == 1 || $role === 'admin') {
                 header('Location: /admin/dashboard');
             } else {
@@ -26,7 +23,9 @@ class AuthController extends Controller
             }
             exit;
         }
-        $this->view('auth.login');
+        
+        // SỬA: Trỏ vào thư mục 'clientviews'
+        $this->view('clientviews.auth.login');
     }
 
     public function handleLogin()
@@ -43,7 +42,7 @@ class AuthController extends Controller
                     'id' => $user['id'],
                     'fullname' => $user['fullname'],
                     'email' => $user['email'],
-                    'role' => $user['role'], // Lưu ý: Database trả về 'admin' hoặc 1
+                    'role' => $user['role'],
                     'phone' => $user['phone']
                 ];
 
@@ -56,7 +55,8 @@ class AuthController extends Controller
                 exit;
             } else {
                 $error = "Email hoặc mật khẩu không đúng!";
-                $this->view('auth.login', ['error' => $error, 'email' => $email]);
+                // SỬA: Trỏ vào thư mục 'clientviews'
+                $this->view('clientviews.auth.login', ['error' => $error, 'email' => $email]);
             }
         } else {
             header('Location: /auth/login');
@@ -71,7 +71,8 @@ class AuthController extends Controller
             header('Location: /');
             exit;
         }
-        $this->view('auth.register');
+        // SỬA: Trỏ vào thư mục 'clientviews'
+        $this->view('clientviews.auth.register');
     }
 
     public function handleRegister()
@@ -84,7 +85,7 @@ class AuthController extends Controller
             $phone = $_POST['phone'] ?? '';
 
             if ($password !== $confirm_password) {
-                $this->view('auth.register', [
+                $this->view('clientviews.auth.register', [
                     'error' => 'Mật khẩu xác nhận không khớp!',
                     'fullname' => $fullname,
                     'email' => $email
@@ -95,7 +96,7 @@ class AuthController extends Controller
             $userModel = $this->model('UserClient');
 
             if ($userModel->findByEmail($email)) {
-                $this->view('auth.register', [
+                $this->view('clientviews.auth.register', [
                     'error' => 'Email này đã được sử dụng!',
                     'fullname' => $fullname
                 ]);
@@ -108,14 +109,14 @@ class AuthController extends Controller
                 'password' => password_hash($password, PASSWORD_DEFAULT),
                 'phone' => $phone,
                 'address' => '',
-                'role' => 0 // Mặc định user thường
+                'role' => 0 
             ];
 
             if ($userModel->create($data)) {
                 header('Location: /auth/login?msg=registered');
                 exit;
             } else {
-                $this->view('auth.register', ['error' => 'Lỗi hệ thống, vui lòng thử lại sau!']);
+                $this->view('clientviews.auth.register', ['error' => 'Lỗi hệ thống, vui lòng thử lại sau!']);
             }
         }
     }
@@ -123,7 +124,8 @@ class AuthController extends Controller
     // --- QUÊN MẬT KHẨU ---
     public function forgotPassword()
     {
-        $this->view('auth.forgot');
+        // SỬA: Trỏ vào thư mục 'clientviews'
+        $this->view('clientviews.auth.forgot');
     }
 
     public function handleForgotPassword()
@@ -145,8 +147,6 @@ class AuthController extends Controller
                     <p>Mã này có hiệu lực trong 15 phút.</p>
                 ";
 
-                // Gọi class Mailler (lưu ý tên class trong file Mailler.php của bạn là Mailler hay Mailer?)
-                // Giả định class là Mailler
                 if (class_exists('Mailler')) {
                     \Mailler::send($email, $subject, $body);
                 }
@@ -166,7 +166,8 @@ class AuthController extends Controller
     public function resetPassword()
     {
         $email = $_GET['email'] ?? '';
-        $this->view('auth.reset', ['email' => $email]);
+        // SỬA: Trỏ vào thư mục 'clientviews'
+        $this->view('clientviews.auth.reset', ['email' => $email]);
     }
 
     public function updatePassword()
@@ -204,7 +205,6 @@ class AuthController extends Controller
         }
     }
 
-    // --- ĐĂNG XUẤT ---
     public function logout()
     {
         if (session_status() === PHP_SESSION_NONE) {

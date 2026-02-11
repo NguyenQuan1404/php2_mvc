@@ -108,6 +108,7 @@
         <!-- Nếu có dữ liệu categories từ Controller -->
         @foreach($categories as $cate)
             <div class="col-6 col-md-3">
+                {{-- Link vào danh mục (nếu đã làm trang danh mục) --}}
                 <a href="#" class="text-decoration-none">
                     <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
                          @if(!empty($cate['image']))
@@ -188,9 +189,10 @@
                         <i class="far fa-heart"></i>
                     </button>
 
-                    <!-- Image -->
+                    <!-- Image (Đã gắn link) -->
                     <div class="product-image-wrapper bg-light">
-                        <a href="#">
+                        {{-- GẮN LINK VÀO ẢNH --}}
+                        <a href="/product/detail/{{ $product['id'] }}">
                             @if($product['image'])
                                 <img src="/uploads/products/{{ $product['image'] }}" alt="{{ $product['name'] }}">
                             @else
@@ -205,7 +207,8 @@
                             {{ $product['category_name'] ?? 'Giày Bóng Đá' }} • {{ $product['brand_name'] ?? 'Chính Hãng' }}
                         </small>
                         <h6 class="card-title fw-bold text-dark mb-1 text-truncate">
-                            <a href="#" class="text-decoration-none text-dark stretched-link">{{ $product['name'] }}</a>
+                            {{-- GẮN LINK VÀO TÊN SẢN PHẨM --}}
+                            <a href="/product/detail/{{ $product['id'] }}" class="text-decoration-none text-dark stretched-link">{{ $product['name'] }}</a>
                         </h6>
                         
                         <!-- Price -->
@@ -220,8 +223,9 @@
                             @endif
                         </div>
                         
-                        <!-- Add to cart hover (Mobile will show always, Desktop on hover via CSS if needed, but here simple) -->
-                        <a href="#" class="btn btn-outline-success w-100 mt-3 rounded-pill fw-bold btn-sm">
+                        <!-- Add to cart hover -->
+                        {{-- Nút này cũng trỏ về chi tiết để chọn size --}}
+                        <a href="/product/detail/{{ $product['id'] }}" class="btn btn-outline-success w-100 mt-3 rounded-pill fw-bold btn-sm">
                             <i class="fas fa-cart-plus me-1"></i> Thêm vào giỏ
                         </a>
                     </div>

@@ -1,11 +1,29 @@
 <?php
+namespace App\Controllers\Admin;
+
+use Controller;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        $products = $this->model('Product')->index();
-        $this->view('product/index', ['products' => $products, 'title' => 'Quản lý Sản phẩm']);
+        // --- FIX LỖI CACHE ---
+        $cachePath = __DIR__ . '/../../storage/cache'; 
+        if (is_dir($cachePath)) {
+            $files = glob($cachePath . '/*'); 
+            foreach($files as $file){ 
+                if(is_file($file)) @unlink($file); 
+            }
+        }
+        // ---------------------
+
+        $productModel = $this->model('Product');
+        $products = $productModel->index();
+        
+        $this->view('adminviews.product.index', [
+            'products' => $products, 
+            'title' => 'Quản lý Sản phẩm'
+        ]);
     }
 
     public function create()
@@ -13,7 +31,7 @@ class ProductController extends Controller
         $categories = $this->model('Category')->index();
         $brands = $this->model('Brand')->index();
 
-        $this->view('product/create', [
+        $this->view('adminviews.product.create', [
             'title' => 'Thêm Sản phẩm',
             'categories' => $categories,
             'brands' => $brands
@@ -27,7 +45,7 @@ class ProductController extends Controller
             $variants = $_POST['variants'] ?? [];
             $totalQuantity = 0;
 
-            // Tính tổng tồn kho
+            // Tính tổng tồn kho từ biến thể (nếu có)
             if (!empty($variants)) {
                 foreach ($variants as $variant) {
                     $totalQuantity += (int)$variant['quantity'];
@@ -36,203 +54,193 @@ class ProductController extends Controller
                 $totalQuantity = $_POST['quantity'] ?? 0;
             }
 
-            // 1. Tạo dữ liệu Sản phẩm chính
+            // 1. Xử lý ảnh chính
+            $mainImage = '';
+            if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                $mainImage = $this->handleUpload($_FILES['image']);
+            }
+
+            // 2. Tạo dữ liệu Sản phẩm chính
             $data = [
                 'name' => $_POST['name'],
                 'category_id' => $_POST['category_id'],
-                'brand_id' => $_POST['brand_id'] ?: null,
+                'brand_id' => !empty($_POST['brand_id']) ? $_POST['brand_id'] : null,
                 'price' => $_POST['price'],
-                'sale_price' => $_POST['sale_price'],
+                'sale_price' => !empty($_POST['sale_price']) ? $_POST['sale_price'] : 0,
                 'quantity' => $totalQuantity,
-                'description' => $_POST['description'],
-                'short_description' => $_POST['short_description'],
-                'status' => $_POST['status'] ?? 1,
-                'image' => $this->handleUpload($_FILES['image'])
+                'image' => $mainImage,
+                'description' => $_POST['description'] ?? '',
+                'short_description' => $_POST['short_description'] ?? '',
+                'status' => isset($_POST['status']) ? 1 : 0
             ];
 
             $productModel = $this->model('Product');
-            
-            if ($productModel->create($data)) {
-                $conn = Database::$connection ?: \Database::connect();
-                $productId = $conn->lastInsertId();
+            $productId = $productModel->create($data); // Hàm create cần trả về ID vừa tạo
 
-                // 2. Lưu biến thể kèm ảnh
-                if (!empty($variants) && $productId) {
-                    $variantModel = $this->model('ProductVariant');
-                    
-                    foreach ($variants as $index => $v) {
-                        if (!empty($v['size']) && !empty($v['color'])) {
-                            // Xử lý upload ảnh cho từng biến thể
-                            $variantImage = $this->handleVariantImageUpload($index);
-                            
-                            $variantModel->create([
-                                'product_id' => $productId,
-                                'size'       => $v['size'],
-                                'color'      => $v['color'],
-                                'quantity'   => $v['quantity'],
-                                'image'      => $variantImage
-                            ]);
-                        }
+            if ($productId) {
+                // 3. Xử lý Biến thể (Variants)
+                $variantModel = $this->model('ProductVariant');
+                
+                if (!empty($variants)) {
+                    foreach ($variants as $index => $variant) {
+                        // Upload ảnh riêng cho biến thể
+                        $variantImage = $this->handleVariantImageUpload($index);
+
+                        $variantData = [
+                            'product_id' => $productId,
+                            'size' => $variant['size'],
+                            'color' => $variant['color'],
+                            'quantity' => $variant['quantity'],
+                            'image' => $variantImage
+                        ];
+                        $variantModel->create($variantData);
                     }
                 }
             }
 
-            header('Location: /product');
-            exit();
+            header('Location: /admin/product');
+            exit;
         }
     }
 
     public function edit($id)
     {
         $product = $this->model('Product')->show($id);
+        $variants = $this->model('ProductVariant')->getByProductId($id);
+        
         $categories = $this->model('Category')->index();
         $brands = $this->model('Brand')->index();
-        $variants = $this->model('ProductVariant')->getByProductId($id);
 
-        $this->view('product/edit', [
-            'title' => 'Sửa Sản phẩm',
+        $this->view('adminviews.product.edit', [
             'product' => $product,
+            'variants' => $variants,
             'categories' => $categories,
             'brands' => $brands,
-            'variants' => $variants
+            'title' => 'Sửa Sản phẩm'
         ]);
     }
 
     public function update($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $productModel = $this->model('Product');
-            $currentProduct = $productModel->show($id);
-
-            // Xử lý ảnh chính
-            $newImage = $this->handleUpload($_FILES['image']);
-            if (empty($newImage)) {
-                $newImage = $currentProduct['image'];
-            } elseif (!empty($currentProduct['image'])) {
-                // Xóa ảnh cũ nếu có ảnh mới
-                $oldPath = "uploads/products/" . $currentProduct['image'];
-                if (file_exists($oldPath)) unlink($oldPath);
-            }
-
+            
             $variants = $_POST['variants'] ?? [];
             $totalQuantity = 0;
-            
+
             if (!empty($variants)) {
                 foreach ($variants as $variant) {
                     $totalQuantity += (int)$variant['quantity'];
                 }
             } else {
-                 $totalQuantity = $_POST['quantity'] ?? 0;
+                $totalQuantity = $_POST['quantity'] ?? 0;
             }
 
+            // 1. Cập nhật thông tin chính
             $data = [
                 'name' => $_POST['name'],
                 'category_id' => $_POST['category_id'],
-                'brand_id' => $_POST['brand_id'] ?: null,
+                'brand_id' => !empty($_POST['brand_id']) ? $_POST['brand_id'] : null,
                 'price' => $_POST['price'],
-                'sale_price' => $_POST['sale_price'],
+                'sale_price' => !empty($_POST['sale_price']) ? $_POST['sale_price'] : 0,
                 'quantity' => $totalQuantity,
-                'description' => $_POST['description'],
-                'short_description' => $_POST['short_description'],
-                'status' => $_POST['status'] ?? 0, // Mặc định là 0 nếu không check
-                'image' => $newImage 
+                'description' => $_POST['description'] ?? '',
+                'short_description' => $_POST['short_description'] ?? '',
+                'status' => isset($_POST['status']) ? 1 : 0
             ];
 
-            $productModel->update($id, $data);
-
-            // --- XỬ LÝ BIẾN THỂ ---
-            $variantModel = $this->model('ProductVariant');
-            
-            // Lấy danh sách biến thể CŨ để xóa ảnh cũ trước khi xóa record
-            $oldVariants = $variantModel->getByProductId($id);
-            foreach ($oldVariants as $ov) {
-                // Logic xóa ảnh biến thể cũ có thể đặt ở đây nếu muốn dọn dẹp triệt để
-                // Tuy nhiên, nếu user giữ lại ảnh cũ thì cần cẩn thận.
-                // Để đơn giản: ta sẽ xóa record, nhưng ảnh thì chỉ xóa nếu user upload ảnh mới đè lên?
-                // Ở đây ta dùng cách: Reset toàn bộ biến thể và tạo lại.
+            // Nếu có upload ảnh mới thì cập nhật
+            if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                $data['image'] = $this->handleUpload($_FILES['image']);
             }
-            $variantModel->deleteByProductId($id); 
+
+            $this->model('Product')->update($id, $data);
+
+            // 2. Xử lý Biến thể: Xóa cũ tạo mới (Cách đơn giản nhất)
+            // Lưu ý: Cách này sẽ mất ảnh biến thể cũ nếu không xử lý kỹ. 
+            // Để an toàn, ở đây tôi giả định xóa hết tạo lại. Nếu muốn giữ ảnh cũ phải logic phức tạp hơn.
+            
+            $variantModel = $this->model('ProductVariant');
+            $variantModel->deleteByProductId($id);
 
             if (!empty($variants)) {
-                foreach ($variants as $index => $v) {
-                    if (!empty($v['size']) && !empty($v['color'])) {
-                        
-                        // 1. Kiểm tra xem có upload ảnh mới cho biến thể này không
-                        $uploadedImage = $this->handleVariantImageUpload($index);
-                        
-                        // 2. Nếu không upload mới, kiểm tra xem có hidden input chứa tên ảnh cũ không
-                        $finalImage = $uploadedImage;
-                        if (empty($finalImage) && !empty($v['old_image'])) {
-                            $finalImage = $v['old_image'];
-                        }
-
-                        $variantModel->create([
-                            'product_id' => $id,
-                            'size'       => $v['size'],
-                            'color'      => $v['color'],
-                            'quantity'   => $v['quantity'],
-                            'image'      => $finalImage
-                        ]);
+                foreach ($variants as $index => $variant) {
+                    // Check upload ảnh mới
+                    $variantImage = $this->handleVariantImageUpload($index);
+                    
+                    // Nếu không upload ảnh mới, lấy lại ảnh cũ từ hidden field (nếu có)
+                    if (!$variantImage && isset($_POST['existing_variant_images'][$index])) {
+                        $variantImage = $_POST['existing_variant_images'][$index];
                     }
+
+                    $variantData = [
+                        'product_id' => $id,
+                        'size' => $variant['size'],
+                        'color' => $variant['color'],
+                        'quantity' => $variant['quantity'],
+                        'image' => $variantImage
+                    ];
+                    $variantModel->create($variantData);
                 }
             }
 
-            header('Location: /product');
-            exit();
+            header('Location: /admin/product');
+            exit;
         }
     }
 
     public function delete($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $productModel = $this->model('Product');
-            $product = $productModel->show($id);
-            
-            if (!empty($product['image'])) {
-                $path = "uploads/products/" . $product['image'];
-                if (file_exists($path)) unlink($path);
-            }
-            
-            // Có thể thêm logic xóa ảnh của các biến thể con tại đây
-
-            $productModel->delete($id);
-            header('Location: /product');
-        }
+        // Xóa biến thể trước
+        $this->model('ProductVariant')->deleteByProductId($id);
+        // Xóa sản phẩm
+        $this->model('Product')->delete($id);
+        
+        header('Location: /admin/product');
+        exit;
     }
 
+    // --- HELPER UPLOAD (Dùng đường dẫn tuyệt đối) ---
     private function handleUpload($file)
     {
         if (!isset($file['name']) || $file['error'] != 0) return null;
         
-        $targetDir = "uploads/products/";
-        if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+        // Dùng __DIR__ để trỏ về public/uploads/products
+        $targetDir = __DIR__ . '/../../public/uploads/products/';
+        
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
         
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $fileName = time() . '_' . rand(1000, 9999) . '.' . $extension;
         $targetFile = $targetDir . $fileName;
         
-        if (move_uploaded_file($file['tmp_name'], $targetFile)) return $fileName;
+        if (move_uploaded_file($file['tmp_name'], $targetFile)) {
+            return $fileName;
+        }
         return null;
     }
 
-    // Hàm mới: Xử lý upload ảnh trong mảng variants
     private function handleVariantImageUpload($index)
     {
-        // Kiểm tra xem có file nào được upload ở index này không
         if (!isset($_FILES['variants']['name'][$index]['image'])) return null;
         if ($_FILES['variants']['error'][$index]['image'] != 0) return null;
 
-        $targetDir = "uploads/products/";
-        if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+        $targetDir = __DIR__ . '/../../public/uploads/products/';
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
 
         $tmpName = $_FILES['variants']['tmp_name'][$index]['image'];
         $originalName = $_FILES['variants']['name'][$index]['image'];
         
         $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-        $fileName = 'var_' . time() . '_' . $index . '_' . rand(100,999) . '.' . $extension;
+        $fileName = 'var_' . time() . '_' . $index . '_' . rand(100, 999) . '.' . $extension;
         $targetFile = $targetDir . $fileName;
 
-        if (move_uploaded_file($tmpName, $targetFile)) return $fileName;
+        if (move_uploaded_file($tmpName, $targetFile)) {
+            return $fileName;
+        }
         return null;
     }
 }

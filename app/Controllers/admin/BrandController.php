@@ -2,17 +2,35 @@
 namespace App\Controllers\Admin;
 
 use Controller;
+
 class BrandController extends Controller
 {
     public function index()
     {
-        $brands = $this->model('Brand')->index();
-        $this->view('brand/index', ['brands' => $brands, 'title' => 'Quản lý Thương hiệu']);
+        // --- FIX LỖI CACHE TỰ ĐỘNG ---
+        $cachePath = __DIR__ . '/../../storage/cache'; 
+        if (is_dir($cachePath)) {
+            $files = glob($cachePath . '/*'); 
+            foreach($files as $file){ 
+                if(is_file($file)) @unlink($file); 
+            }
+        }
+        // -----------------------------
+
+        // Gọi Model và lấy dữ liệu
+        $brandModel = $this->model('Brand');
+        $brands = $brandModel->index();
+
+        // Trỏ vào thư mục adminviews/brand
+        $this->view('adminviews.brand.index', [
+            'brands' => $brands, 
+            'title' => 'Quản lý Thương hiệu'
+        ]);
     }
 
     public function create()
     {
-        $this->view('brand/create', ['title' => 'Thêm Thương hiệu mới']);
+        $this->view('adminviews.brand.create', ['title' => 'Thêm Thương hiệu mới']);
     }
 
     public function store()
@@ -26,16 +44,26 @@ class BrandController extends Controller
                 return;
             }
 
-            $this->model('Brand')->create(['name' => $name, 'description' => $description]);
-            header('Location: /brand');
+            $this->model('Brand')->create([
+                'name' => $name, 
+                'description' => $description
+            ]);
+
+            // Chuyển hướng về /admin/brand
+            header('Location: /admin/brand');
             exit();
         }
     }
 
     public function edit($id)
     {
-        $brand = $this->model('Brand')->show($id);
-        $this->view('brand/edit', ['brand' => $brand, 'title' => 'Sửa Thương hiệu']);
+        $brandModel = $this->model('Brand');
+        $brand = $brandModel->show($id);
+
+        $this->view('adminviews.brand.edit', [
+            'brand' => $brand, 
+            'title' => 'Sửa Thương hiệu'
+        ]);
     }
 
     public function update($id)
@@ -44,18 +72,23 @@ class BrandController extends Controller
             $name = $_POST['name'] ?? '';
             $description = $_POST['description'] ?? '';
 
-            $this->model('Brand')->update($id, ['name' => $name, 'description' => $description]);
-            header('Location: /brand');
+            $this->model('Brand')->update($id, [
+                'name' => $name, 
+                'description' => $description
+            ]);
+
+            // Chuyển hướng về /admin/brand
+            header('Location: /admin/brand');
             exit();
         }
     }
 
     public function delete($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $this->model('Brand')->delete($id);
-            header('Location: /brand');
-            exit();
-        }
+        $this->model('Brand')->delete($id);
+        
+        // Chuyển hướng về /admin/brand
+        header('Location: /admin/brand');
+        exit();
     }
 }

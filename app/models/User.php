@@ -40,6 +40,7 @@ class User extends Model
 
     public function update($id, $data)
     {
+        // Build câu SQL động để xử lý mật khẩu
         $passSql = !empty($data['password']) ? ", password = :password" : "";
         
         $sql = "UPDATE $this->table SET 
@@ -54,6 +55,7 @@ class User extends Model
         $stmt = $conn->prepare($sql);
         
         $data['id'] = $id;
+        // Nếu không có password mới thì xóa key password khỏi mảng data để tránh lỗi SQL
         if (empty($data['password'])) {
             unset($data['password']); 
         }

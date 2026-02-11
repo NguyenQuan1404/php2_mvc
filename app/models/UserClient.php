@@ -3,18 +3,31 @@ class UserClient extends Model
 {
     private $table = 'users';
 
-    public function index()
+    // Đăng nhập: Kiểm tra email và password
+    public function authenticate($email, $password)
     {
-        $sql = "SELECT * FROM $this->table ORDER BY id DESC";
+        $sql = "SELECT * FROM $this->table WHERE email = :email";
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->execute(['email' => $email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user['password'])) {
+            return $user;
+        }
+        return false;
+    }
+
+    public function findByEmail($email) {
+        $sql = "SELECT * FROM $this->table WHERE email = :email";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['email' => $email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function create($data)
     {
-        // Mặc định role là 0 (User) nếu không truyền vào
         $role = $data['role'] ?? 0;
         
         $sql = "INSERT INTO $this->table (fullname, email, password, phone, address, role) 
@@ -31,55 +44,9 @@ class UserClient extends Model
         ]);
     }
 
-    public function findByEmail($email) {
-        $sql = "SELECT * FROM $this->table WHERE email = :email";
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['email' => $email]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    // Hàm xác thực đăng nhập
-    public function authenticate($email, $password)
-    {
-        $user = $this->findByEmail($email);
-        
-        if ($user && password_verify($password, $user['password'])) {
-            return $user;
-        }
-        
-        return false;
-    }
-
-    public function update($id, $data)
-    {
-        $passSql = !empty($data['password']) ? ", password = :password" : "";
-        
-        $sql = "UPDATE $this->table SET 
-                fullname = :fullname, 
-                phone = :phone, 
-                address = :address, 
-                role = :role 
-                $passSql
-                WHERE id = :id";
-                
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        
-        $data['id'] = $id;
-        if (empty($data['password'])) {
-            unset($data['password']); 
-        }
-        
-        return $stmt->execute($data);
-    }
-
-    // --- LOGIC XỬ LÝ OTP (Đã sửa lỗi Timezone & Chuyển sang OTP) ---
-
-    // 1. Lưu OTP vào DB
+    // Lưu mã OTP vào database
     public function saveResetToken($email, $token)
     {
-        // SỬA: Dùng NOW() của MySQL + INTERVAL 15 MINUTE để tránh lệch giờ giữa PHP và MySQL
         $sql = "UPDATE $this->table 
                 SET reset_token = :token, 
                     reset_token_expire = DATE_ADD(NOW(), INTERVAL 15 MINUTE) 
@@ -88,15 +55,14 @@ class UserClient extends Model
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
-            'token' => $token, // Ở đây token chính là mã OTP 6 số
+            'token' => $token,
             'email' => $email
         ]);
     }
 
-    // 2. Kiểm tra OTP có đúng với Email và còn hạn không
+    // Kiểm tra OTP
     public function checkUserOtp($email, $otp)
     {
-        // Check 3 điều kiện: đúng email, đúng mã OTP, và thời gian hết hạn phải lớn hơn NOW()
         $sql = "SELECT * FROM $this->table 
                 WHERE email = :email 
                 AND reset_token = :otp 
@@ -111,14 +77,19 @@ class UserClient extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 3. Đổi mật khẩu và xóa OTP
+    // Đổi mật khẩu mới
     public function resetPassword($email, $newPassword)
     {
-        $sql = "UPDATE $this->table SET password = :password, reset_token = NULL, reset_token_expire = NULL WHERE email = :email";
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        
+        $sql = "UPDATE $this->table 
+                SET password = :password, reset_token = NULL, reset_token_expire = NULL 
+                WHERE email = :email";
+                
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
-            'password' => password_hash($newPassword, PASSWORD_DEFAULT),
+            'password' => $hashedPassword,
             'email' => $email
         ]);
     }

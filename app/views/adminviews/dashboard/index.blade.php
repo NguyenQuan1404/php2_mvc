@@ -81,7 +81,7 @@
     </div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Recent Activity & Quick Actions -->
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card h-100 shadow-sm">
@@ -89,10 +89,7 @@
                 <h5 class="mb-0 fw-bold">Hoạt động gần đây</h5>
             </div>
             <div class="card-body">
-                <div class="alert alert-info border-0 bg-info bg-opacity-10 text-info">
-                    <i class="bi bi-info-circle me-2"></i> Hệ thống đang hoạt động ổn định.
-                </div>
-                <table class="table align-middle">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>Hoạt động</th>
@@ -118,13 +115,14 @@
                 <h5 class="mb-0 fw-bold">Thao tác nhanh</h5>
             </div>
             <div class="card-body d-grid gap-2">
-                <a href="/product/create" class="btn btn-outline-primary text-start">
+                {{-- SỬA LINK: Thêm /admin vào trước --}}
+                <a href="/admin/product/create" class="btn btn-outline-primary text-start">
                     <i class="bi bi-plus-lg me-2"></i> Thêm sản phẩm mới
                 </a>
-                <a href="/category/create" class="btn btn-outline-success text-start">
+                <a href="/admin/category/create" class="btn btn-outline-success text-start">
                     <i class="bi bi-folder-plus me-2"></i> Tạo danh mục mới
                 </a>
-                <a href="/user/create" class="btn btn-outline-danger text-start">
+                <a href="/admin/user/create" class="btn btn-outline-danger text-start">
                     <i class="bi bi-person-plus me-2"></i> Thêm nhân viên/user
                 </a>
             </div>

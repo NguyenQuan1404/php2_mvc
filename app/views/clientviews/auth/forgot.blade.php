@@ -1,38 +1,42 @@
 @extends('layouts.client')
 
+@section('title', 'Quên mật khẩu')
+
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Quên Mật Khẩu</h4>
+        <div class="col-md-5">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white text-center">
+                    <h5 class="mb-0">Quên Mật Khẩu</h5>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted">Nhập email của bạn để nhận liên kết đặt lại mật khẩu.</p>
+                <div class="card-body p-4">
+                    <p class="text-muted text-center mb-4">Nhập email đã đăng ký để nhận mã OTP đặt lại mật khẩu.</p>
                     
-                    <?php if (isset($_SESSION['error'])): ?>
-                        <div class="alert alert-danger">
-                            <?= $_SESSION['error']; unset($_SESSION['error']); ?>
+                    @if (isset($_SESSION['error']))
+                        <div class="alert alert-danger small">
+                            {{ $_SESSION['error'] }}
+                            @php unset($_SESSION['error']); @endphp
                         </div>
-                    <?php endif; ?>
+                    @endif
 
-                    <?php if (isset($_SESSION['success'])): ?>
-                        <div class="alert alert-success">
-                            <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+                    @if (isset($_SESSION['success']))
+                        <div class="alert alert-success small">
+                            {{ $_SESSION['success'] }}
+                            @php unset($_SESSION['success']); @endphp
                         </div>
-                    <?php endif; ?>
+                    @endif
 
-                    <!-- Action trỏ về AuthController -> hàm sendReset -->
                     <form action="/auth/handleForgotPassword" method="POST">
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email đăng ký</label>
+                            <label for="email" class="form-label fw-bold">Email đăng ký</label>
                             <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Gửi Link Reset</button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Gửi Mã OTP</button>
+                        </div>
                         <div class="mt-3 text-center">
-                            <!-- Link quay lại AuthController -> hàm login -->
-                            <a href="/auth/login" class="text-decoration-none">Quay lại Đăng nhập</a>
+                            <a href="/auth/login" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> Quay lại Đăng nhập</a>
                         </div>
                     </form>
                 </div>

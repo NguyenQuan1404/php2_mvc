@@ -3,7 +3,7 @@ class Product extends Model
 {
     private $table = 'products';
 
-
+    // --- ADMIN METHODS (Giữ nguyên) ---
     public function index()
     {
         $sql = "SELECT p.*, c.name as category_name, b.name as brand_name 
@@ -17,27 +17,30 @@ class Product extends Model
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getActiveProducts()
-    {
-        $sql = "SELECT p.*, c.name as category_name, b.name as brand_name 
-                FROM $this->table p
-                LEFT JOIN category c ON p.category_id = c.id
-                LEFT JOIN brands b ON p.brand_id = b.id
-                WHERE p.status = 1 
-                ORDER BY p.id DESC";
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     public function create($data)
     {
         $sql = "INSERT INTO $this->table (name, category_id, brand_id, price, sale_price, quantity, image, description, short_description, status) 
                 VALUES (:name, :category_id, :brand_id, :price, :sale_price, :quantity, :image, :description, :short_description, :status)";
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
-        return $stmt->execute($data);
+        
+        $result = $stmt->execute([
+            'name' => $data['name'],
+            'category_id' => $data['category_id'],
+            'brand_id' => $data['brand_id'],
+            'price' => $data['price'],
+            'sale_price' => $data['sale_price'],
+            'quantity' => $data['quantity'],
+            'image' => $data['image'],
+            'description' => $data['description'],
+            'short_description' => $data['short_description'],
+            'status' => $data['status']
+        ]);
+
+        if ($result) {
+            return $conn->lastInsertId();
+        }
+        return false;
     }
 
     public function show($id)
@@ -60,9 +63,20 @@ class Product extends Model
                 WHERE id = :id";
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
-        $data['id'] = $id;
-        if (empty($data['image'])) unset($data['image']);
-        return $stmt->execute($data);
+        $params = [
+            'name' => $data['name'],
+            'category_id' => $data['category_id'],
+            'brand_id' => $data['brand_id'],
+            'price' => $data['price'],
+            'sale_price' => $data['sale_price'],
+            'quantity' => $data['quantity'],
+            'description' => $data['description'],
+            'short_description' => $data['short_description'],
+            'status' => $data['status'],
+            'id' => $id
+        ];
+        if (!empty($data['image'])) $params['image'] = $data['image'];
+        return $stmt->execute($params);
     }
 
     public function delete($id)
@@ -71,5 +85,48 @@ class Product extends Model
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
         return $stmt->execute(['id' => $id]);
+    }
+
+    // --- CLIENT METHODS ---
+
+    // Lấy sản phẩm active cho trang chủ
+    public function getActiveProducts()
+    {
+        $sql = "SELECT p.*, c.name as category_name, b.name as brand_name 
+                FROM $this->table p
+                LEFT JOIN category c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE p.status = 1 
+                ORDER BY p.id DESC";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy chi tiết 1 sản phẩm (Kèm tên Brand, Category)
+    public function getDetail($id)
+    {
+        $sql = "SELECT p.*, c.name as category_name, b.name as brand_name 
+                FROM $this->table p
+                LEFT JOIN category c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE p.id = :id AND p.status = 1";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy sản phẩm liên quan (cùng danh mục, trừ chính nó)
+    public function getRelatedProducts($categoryId, $excludeId)
+    {
+        $sql = "SELECT * FROM $this->table 
+                WHERE category_id = :cid AND id != :eid AND status = 1 
+                ORDER BY rand() LIMIT 4";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['cid' => $categoryId, 'eid' => $excludeId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

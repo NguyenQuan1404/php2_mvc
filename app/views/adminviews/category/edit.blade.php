@@ -10,10 +10,12 @@
                 <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Chỉnh Sửa Loại Đế</h4>
             </div>
             <div class="card-body p-4">
-                <form action="/category/update/{{ $category['id'] }}" method="POST" enctype="multipart/form-data">
+                {{-- SỬA: Thêm /admin vào action --}}
+                <form action="/admin/category/update/{{ $category['id'] }}" method="POST" enctype="multipart/form-data">
                     
                     <div class="mb-3">
                         <label for="tendanhmuc" class="form-label fw-bold">Tên Loại đế (TF, FG, IC...)</label>
+                        {{-- name="tendanhmuc" khớp với Controller --}}
                         <input type="text" class="form-control" id="tendanhmuc" name="tendanhmuc" 
                                value="{{ $category['name'] }}" required>
                     </div>
@@ -38,7 +40,8 @@
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="/category" class="btn btn-secondary">
+                        {{-- SỬA: Nút Hủy về trang admin --}}
+                        <a href="/admin/category" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Hủy bỏ
                         </a>
                         <button type="submit" class="btn btn-warning fw-bold">

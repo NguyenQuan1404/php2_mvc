@@ -25,11 +25,11 @@ class ProductVariant extends Model
             'size'       => $data['size'],
             'color'      => $data['color'],
             'quantity'   => $data['quantity'],
-            'image'      => $data['image'] ?? null // Xử lý trường hợp không có ảnh
+            'image'      => $data['image'] ?? null
         ]);
     }
 
-    // Xóa tất cả biến thể của sản phẩm
+    // Xóa tất cả biến thể của sản phẩm (Dùng khi update hoặc delete sản phẩm)
     public function deleteByProductId($productId)
     {
         $sql = "DELETE FROM $this->table WHERE product_id = :product_id";

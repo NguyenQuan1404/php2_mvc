@@ -2,12 +2,25 @@
 namespace App\Controllers\Admin;
 
 use Controller;
+
 class CouponController extends Controller
 {
     public function index()
     {
-        $coupons = $this->model('Coupon')->getAll();
-        $this->view('/adminviews/coupon/index', [
+        // --- FIX LỖI CACHE TỰ ĐỘNG ---
+        $cachePath = __DIR__ . '/../../storage/cache'; 
+        if (is_dir($cachePath)) {
+            $files = glob($cachePath . '/*'); 
+            foreach($files as $file){ 
+                if(is_file($file)) @unlink($file); 
+            }
+        }
+        // -----------------------------
+
+        // Gọi Model và dùng hàm index() cho đồng bộ
+        $coupons = $this->model('Coupon')->index();
+        
+        $this->view('adminviews.coupon.index', [
             'coupons' => $coupons,
             'title' => 'Quản lý Mã giảm giá'
         ]);
@@ -15,7 +28,7 @@ class CouponController extends Controller
 
     public function create()
     {
-        $this->view('coupon/create', [
+        $this->view('adminviews.coupon.create', [
             'title' => 'Thêm Mã giảm giá'
         ]);
     }
@@ -24,51 +37,44 @@ class CouponController extends Controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $couponModel = $this->model('Coupon');
-            $code = strtoupper($_POST['code']);
+            $code = strtoupper($_POST['code'] ?? '');
 
             // Kiểm tra trùng mã
             if ($couponModel->checkCodeExists($code)) {
-                // Đơn giản hóa: Nếu trùng thì quay lại trang create (Thực tế nên có thông báo lỗi)
                 echo "<script>alert('Mã giảm giá này đã tồn tại!'); window.history.back();</script>";
                 return;
             }
 
             $data = [
                 'code' => $code,
-                'type' => $_POST['type'],
-                'value' => $_POST['value'],
+                'type' => $_POST['type'] ?? 'fixed',
+                'value' => $_POST['value'] ?? 0,
                 'min_order_value' => $_POST['min_order_value'] ?? 0,
-                'quantity' => $_POST['quantity'],
-                'start_date' => $_POST['start_date'],
-                'end_date' => $_POST['end_date'],
+                'quantity' => $_POST['quantity'] ?? 0,
+                'start_date' => $_POST['start_date'] ?? date('Y-m-d'),
+                'end_date' => $_POST['end_date'] ?? date('Y-m-d'),
                 'status' => isset($_POST['status']) ? 1 : 0
             ];
 
-            if ($couponModel->create($data)) {
-                header('Location: /coupon');
-            } else {
-                echo "Có lỗi xảy ra!";
-            }
+            $couponModel->create($data);
+            
+            // Chuyển hướng về /admin/coupon
+            header('Location: /admin/coupon');
+            exit;
         }
     }
 
     public function edit($id)
     {
         $couponModel = $this->model('Coupon');
-        // Sử dụng hàm show kế thừa từ Model cha (nếu có) hoặc viết query select * from coupons where id = $id
-        // Giả sử Model cha có hàm show($id) hoặc find($id)
-        // Nếu Model cha chưa có, ta dùng query trực tiếp ở đây hoặc thêm vào model
-        
-        // Để chắc chắn, ta gọi phương thức show từ Model (thường các framework MVC cơ bản đều có)
-        // Nếu lỗi, bạn hãy thêm function show($id) vào Model Coupon nhé.
-        $coupon = $couponModel->show($id);
+        $coupon = $couponModel->show($id); // Đảm bảo Model có hàm show
 
         if (!$coupon) {
-            header('Location: /coupon');
+            header('Location: /admin/coupon');
             exit;
         }
 
-        $this->view('coupon/edit', [
+        $this->view('adminviews.coupon.edit', [
             'coupon' => $coupon,
             'title' => 'Sửa Mã giảm giá'
         ]);
@@ -78,7 +84,7 @@ class CouponController extends Controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $couponModel = $this->model('Coupon');
-            $code = strtoupper($_POST['code']);
+            $code = strtoupper($_POST['code'] ?? '');
 
             // Kiểm tra trùng mã (trừ chính ID đang sửa)
             if ($couponModel->checkCodeExists($code, $id)) {
@@ -88,25 +94,29 @@ class CouponController extends Controller
 
             $data = [
                 'code' => $code,
-                'type' => $_POST['type'],
-                'value' => $_POST['value'],
+                'type' => $_POST['type'] ?? 'fixed',
+                'value' => $_POST['value'] ?? 0,
                 'min_order_value' => $_POST['min_order_value'] ?? 0,
-                'quantity' => $_POST['quantity'],
-                'start_date' => $_POST['start_date'],
-                'end_date' => $_POST['end_date'],
+                'quantity' => $_POST['quantity'] ?? 0,
+                'start_date' => $_POST['start_date'] ?? date('Y-m-d'),
+                'end_date' => $_POST['end_date'] ?? date('Y-m-d'),
                 'status' => isset($_POST['status']) ? 1 : 0
             ];
 
             $couponModel->update($id, $data);
-            header('Location: /coupon');
+            
+            // Chuyển hướng về /admin/coupon
+            header('Location: /admin/coupon');
+            exit;
         }
     }
 
     public function delete($id)
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $this->model('Coupon')->delete($id);
-            header('Location: /coupon');
-        }
+        $this->model('Coupon')->delete($id);
+        
+        // Chuyển hướng về /admin/coupon
+        header('Location: /admin/coupon');
+        exit;
     }
 }

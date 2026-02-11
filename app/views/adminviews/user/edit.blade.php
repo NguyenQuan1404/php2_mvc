@@ -8,7 +8,8 @@
         <h4 class="mb-0">Sửa Người dùng: {{ $user['fullname'] }}</h4>
     </div>
     <div class="card-body p-4">
-        <form action="/user/update/{{ $user['id'] }}" method="POST">
+        {{-- ACTION: /admin/user/update --}}
+        <form action="/admin/user/update/{{ $user['id'] }}" method="POST">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Họ tên</label>
@@ -48,7 +49,8 @@
                 <button type="submit" class="btn btn-warning">
                     <i class="bi bi-pencil-square"></i> Cập nhật
                 </button>
-                <a href="/user" class="btn btn-secondary">Hủy</a>
+                {{-- LINK: /admin/user --}}
+                <a href="/admin/user" class="btn btn-secondary">Hủy</a>
             </div>
         </form>
     </div>

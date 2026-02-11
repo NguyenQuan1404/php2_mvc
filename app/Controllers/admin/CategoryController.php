@@ -7,75 +7,57 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        // --- ĐOẠN CODE FIX LỖI (TỰ ĐỘNG XÓA CACHE & DEBUG) ---
-        
-        // 1. Tự động dọn dẹp Cache cũ
-        $cachePath = __DIR__ . '/../../storage/cache'; // Đường dẫn tương đối từ Controllers/Admin
+        // --- FIX LỖI CACHE ---
+        // Vẫn giữ đoạn này để đảm bảo code nhận diện đúng thư mục view mới
+        $cachePath = __DIR__ . '/../../storage/cache'; 
         if (is_dir($cachePath)) {
             $files = glob($cachePath . '/*'); 
             foreach($files as $file){ 
-                if(is_file($file)) unlink($file); 
+                if(is_file($file)) @unlink($file); 
             }
         }
-
-        // 2. Kiểm tra đường dẫn View thực tế
-        // Lấy VIEW_PATH từ hằng số hoặc tính toán thủ công
-        $viewPath = defined('VIEW_PATH') ? VIEW_PATH : realpath(__DIR__ . '/../../views');
-        $targetFolder = $viewPath . '/adminviews/category';
-        $targetFile = $targetFolder . '/index.blade.php';
-
-        if (!file_exists($targetFile)) {
-            echo "<div style='font-family: sans-serif; background: #fff3cd; color: #856404; padding: 20px; border: 2px solid #ffeeba; margin: 20px;'>";
-            echo "<h2 style='color: red; margin-top: 0;'>🔥 VẪN KHÔNG TÌM THẤY VIEW!</h2>";
-            echo "<p>Hệ thống đã tự động xóa cache, nhưng vẫn không thấy file view.</p>";
-            echo "<hr>";
-            echo "<strong>1. Hệ thống đang tìm file tại đây:</strong><br><code style='background:#eee; padding:5px; display:block; margin:5px 0;'>$targetFile</code>";
-            
-            echo "<br><strong>2. Kiểm tra thư mục 'adminviews':</strong><br>";
-            $adminViewPath = $viewPath . '/adminviews';
-            if (!is_dir($adminViewPath)) {
-                echo "<span style='color: red'>❌ Thư mục <b>adminviews</b> KHÔNG tồn tại trong <b>app/views</b>!</span>";
-                echo "<br>Danh sách thư mục đang có trong app/views:<pre>" . print_r(scandir($viewPath), true) . "</pre>";
-            } else {
-                echo "<span style='color: green'>✅ Thư mục <b>adminviews</b> có tồn tại.</span>";
-                
-                echo "<br><br><strong>3. Kiểm tra bên trong 'adminviews':</strong><br>";
-                $subDirs = scandir($adminViewPath);
-                echo "Các thư mục con tìm thấy:<pre>" . print_r($subDirs, true) . "</pre>";
-                
-                if (!in_array('category', $subDirs) && in_array('Category', $subDirs)) {
-                    echo "<h3 style='color: blue'>💡 PHÁT HIỆN: Bạn đặt tên thư mục là 'Category' (viết hoa), hãy sửa code thành 'adminviews.Category.index' hoặc đổi tên thư mục thành thường.</h3>";
-                }
-            }
-            echo "</div>";
-            die(); // Dừng code để bạn đọc thông báo
-        }
-        // --- KẾT THÚC ĐOẠN DEBUG ---
-
+        // ---------------------
 
         $categoryModel = $this->model('Category');
-        
-        // Gọi hàm index() thay vì all()
         $categories = $categoryModel->index(); 
         
-        // Trỏ vào thư mục 'adminviews' -> 'category' -> 'index.blade.php'
         $this->view('adminviews.category.index', ['categories' => $categories]);
     }
 
     public function create()
     {
-        // Trỏ vào thư mục 'adminviews'
         $this->view('adminviews.category.create');
     }
 
     public function store()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $name = $_POST['name'] ?? '';
-            // Xử lý upload ảnh (nếu có) tại đây
+            // SỬA: Lấy đúng tên input từ form (create.blade.php dùng 'tendanhmuc')
+            $name = $_POST['tendanhmuc'] ?? '';
+            $image = '';
+
+            // XỬ LÝ UPLOAD ẢNH
+            if (isset($_FILES['hinhanh']) && $_FILES['hinhanh']['error'] === UPLOAD_ERR_OK) {
+                // Đường dẫn lưu: app/public/uploads/categories
+                $uploadDir = __DIR__ . '/../../public/uploads/categories/';
+                
+                // Tạo thư mục nếu chưa có
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+
+                // Tạo tên file ngẫu nhiên để tránh trùng
+                $fileName = time() . '_' . basename($_FILES['hinhanh']['name']);
+                $targetPath = $uploadDir . $fileName;
+
+                if (move_uploaded_file($_FILES['hinhanh']['tmp_name'], $targetPath)) {
+                    $image = $fileName;
+                }
+            }
             
             $categoryModel = $this->model('Category');
-            $categoryModel->create(['name' => $name]);
+            // Truyền đúng key 'name' và 'image' mà Model yêu cầu
+            $categoryModel->create(['name' => $name, 'image' => $image]);
 
             header('Location: /admin/category');
             exit;
@@ -85,21 +67,34 @@ class CategoryController extends Controller
     public function edit($id)
     {
         $categoryModel = $this->model('Category');
-        
-        // Gọi hàm show($id)
         $category = $categoryModel->show($id);
         
-        // Trỏ vào thư mục 'adminviews'
         $this->view('adminviews.category.edit', ['category' => $category]);
     }
 
     public function update($id)
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $name = $_POST['name'] ?? '';
-            
+            // SỬA: Lấy đúng tên input (tendanhmuc)
+            $name = $_POST['tendanhmuc'] ?? '';
+            $data = ['name' => $name];
+
+            // XỬ LÝ UPLOAD ẢNH (Nếu có chọn ảnh mới)
+            if (isset($_FILES['hinhanh']) && $_FILES['hinhanh']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../../public/uploads/categories/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+                $fileName = time() . '_' . basename($_FILES['hinhanh']['name']);
+                $targetPath = $uploadDir . $fileName;
+
+                if (move_uploaded_file($_FILES['hinhanh']['tmp_name'], $targetPath)) {
+                    // Chỉ thêm key 'image' nếu upload thành công
+                    $data['image'] = $fileName;
+                }
+            }
+
             $categoryModel = $this->model('Category');
-            $categoryModel->update($id, ['name' => $name]);
+            $categoryModel->update($id, $data);
 
             header('Location: /admin/category');
             exit;

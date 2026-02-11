@@ -8,7 +8,8 @@
         <h4 class="mb-0">Tạo Mã Giảm Giá Mới</h4>
     </div>
     <div class="card-body">
-        <form action="/coupon/store" method="POST">
+        {{-- SỬA ACTION: /admin/coupon/store --}}
+        <form action="/admin/coupon/store" method="POST">
             
             <div class="row mb-3">
                 <div class="col-md-6">
@@ -31,8 +32,10 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Giá trị giảm</label>
-                    <input type="number" class="form-control" name="value" required min="0">
-                    <small class="text-muted" id="valueHint">Nhập số tiền VNĐ</small>
+                    <div class="input-group">
+                        <input type="number" class="form-control" name="value" required min="1">
+                        <span class="input-group-text" id="valueHint">VND</span>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Đơn hàng tối thiểu</label>
@@ -58,7 +61,8 @@
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Lưu Mã</button>
-                <a href="/coupon" class="btn btn-secondary">Hủy bỏ</a>
+                {{-- SỬA LINK: /admin/coupon --}}
+                <a href="/admin/coupon" class="btn btn-secondary">Hủy bỏ</a>
             </div>
         </form>
     </div>
@@ -69,9 +73,9 @@
     document.getElementById('discountType').addEventListener('change', function() {
         const hint = document.getElementById('valueHint');
         if(this.value === 'percent') {
-            hint.textContent = 'Nhập số % (VD: 10, 20)';
+            hint.textContent = 'Nhập số % (VD: 10)';
         } else {
-            hint.textContent = 'Nhập số tiền VNĐ';
+            hint.textContent = 'VND';
         }
     });
 </script>

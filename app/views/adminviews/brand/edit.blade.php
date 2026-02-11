@@ -8,7 +8,8 @@
         <h4 class="mb-0">Sửa Thương hiệu: {{ $brand['name'] }}</h4>
     </div>
     <div class="card-body p-4">
-        <form action="/brand/update/{{ $brand['id'] }}" method="POST">
+        {{-- SỬA ACTION: /admin/brand/update --}}
+        <form action="/admin/brand/update/{{ $brand['id'] }}" method="POST">
             <div class="mb-3">
                 <label class="form-label fw-bold">Tên Thương hiệu</label>
                 <input type="text" class="form-control" name="name" value="{{ $brand['name'] }}" required>
@@ -22,7 +23,8 @@
                 <button type="submit" class="btn btn-warning">
                     <i class="bi bi-pencil-square"></i> Cập nhật
                 </button>
-                <a href="/brand" class="btn btn-secondary">Hủy</a>
+                {{-- SỬA LINK HỦY: /admin/brand --}}
+                <a href="/admin/brand" class="btn btn-secondary">Hủy</a>
             </div>
         </form>
     </div>

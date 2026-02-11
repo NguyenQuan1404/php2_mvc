@@ -8,7 +8,8 @@
         <h4 class="mb-0">Thêm Sản phẩm mới</h4>
     </div>
     <div class="card-body">
-        <form action="/product/store" method="POST" enctype="multipart/form-data">
+        {{-- ACTION: /admin/product/store --}}
+        <form action="/admin/product/store" method="POST" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Tên sản phẩm</label>
@@ -33,60 +34,19 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Giá gốc</label>
                     <input type="number" class="form-control" name="price" required min="0">
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Giá khuyến mãi</label>
-                    <input type="number" class="form-control" name="sale_price" value="0" min="0">
+                    <input type="number" class="form-control" name="sale_price" min="0">
                 </div>
-            </div>
-
-            <!-- PHẦN BIẾN THỂ (VARIANTS) -->
-            <div class="mb-4 border p-3 rounded bg-light">
-                <label class="form-label fw-bold text-primary"><i class="bi bi-layers"></i> Biến thể (Size - Màu - Ảnh)</label>
-                <div id="variants-area">
-                    <!-- Dòng mẫu đầu tiên -->
-                    <div class="row g-2 mb-3 variant-item align-items-end border-bottom pb-2">
-                        <div class="col-md-2">
-                            <label class="small text-muted">Size</label>
-                            <input type="text" class="form-control" name="variants[0][size]" placeholder="VD: 40" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="small text-muted">Màu sắc</label>
-                            <input type="text" class="form-control" name="variants[0][color]" placeholder="VD: Đỏ" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="small text-muted">Số lượng</label>
-                            <input type="number" class="form-control" name="variants[0][quantity]" placeholder="0" required min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="small text-muted">Ảnh biến thể (Tùy chọn)</label>
-                            <input type="file" class="form-control" name="variants[0][image]" accept="image/*">
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-danger w-100 remove-variant"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-variant-btn">
-                    <i class="bi bi-plus-lg"></i> Thêm biến thể khác
-                </button>
-            </div>
-            <!-- KẾT THÚC PHẦN BIẾN THỂ -->
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Hình ảnh đại diện (Chính)</label>
-                    <input type="file" class="form-control" name="image" accept="image/*" onchange="previewImage(this)">
-                </div>
-                <div class="col-md-6">
-                    <div class="mt-2">
-                         <img id="preview_img" src="#" alt="Preview" style="display: none; max-height: 150px; border-radius: 5px; border: 1px solid #ddd;">
-                    </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Ảnh đại diện</label>
+                    <input type="file" class="form-control" name="image" accept="image/*">
                 </div>
             </div>
 
@@ -94,39 +54,44 @@
                 <label class="form-label fw-bold">Mô tả ngắn</label>
                 <textarea class="form-control" name="short_description" rows="2"></textarea>
             </div>
+
             <div class="mb-3">
-                <label class="form-label fw-bold">Mô tả chi tiết</label>
+                <label class="form-label fw-bold">Chi tiết sản phẩm</label>
                 <textarea class="form-control" name="description" rows="4"></textarea>
             </div>
 
-            <div class="mb-4 form-check">
-                <input type="checkbox" class="form-check-input" name="status" value="1" checked id="statusCheck">
-                <label class="form-check-label" for="statusCheck">Hiển thị sản phẩm này</label>
+            <div class="mb-3 form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="status" id="status" checked>
+                <label class="form-check-label" for="status">Hiển thị ngay</label>
             </div>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Lưu Sản phẩm
-                </button>
-                <a href="/product" class="btn btn-secondary">Quay lại</a>
+            <hr class="my-4">
+            <h5 class="text-primary fw-bold"><i class="bi bi-boxes"></i> Biến thể (Size/Màu)</h5>
+            <div id="variants-container">
+                <!-- Javascript sẽ render ô nhập vào đây -->
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mb-3" id="add-variant">
+                <i class="bi bi-plus-lg"></i> Thêm biến thể
+            </button>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Lưu Sản phẩm</button>
+                {{-- LINK: /admin/product --}}
+                <a href="/admin/product" class="btn btn-secondary">Hủy</a>
             </div>
         </form>
     </div>
 </div>
 
-@endsection
-
-@section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        let variantIndex = 1;
-        const container = document.getElementById('variants-area');
-        const addBtn = document.getElementById('add-variant-btn');
+        const container = document.getElementById('variants-container');
+        const addBtn = document.getElementById('add-variant');
+        let variantIndex = 0;
 
         addBtn.addEventListener('click', function() {
-            // Sử dụng template literals để tạo dòng mới
             const html = `
-                <div class="row g-2 mb-3 variant-item align-items-end border-bottom pb-2">
+                <div class="row g-2 mb-2 variant-item align-items-center">
                     <div class="col-md-2">
                         <input type="text" class="form-control" name="variants[${variantIndex}][size]" placeholder="Size" required>
                     </div>
@@ -151,11 +116,8 @@
         container.addEventListener('click', function(e) {
             if (e.target.closest('.remove-variant')) {
                 const items = container.querySelectorAll('.variant-item');
-                if(items.length > 1) {
-                    e.target.closest('.variant-item').remove();
-                } else {
-                    alert('Phải có ít nhất một biến thể!');
-                }
+                // Cho phép xóa
+                e.target.closest('.variant-item').remove();
             }
         });
     });

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', $title)
+@section('title', $title ?? 'Thêm Danh Mục')
 
 @section('content')
 <div class="card shadow col-md-8 mx-auto">
@@ -8,9 +8,11 @@
         <h4 class="mb-0">Thêm Danh Mục Mới</h4>
     </div>
     <div class="card-body p-4">
-        <form action="/category/store" method="POST" enctype="multipart/form-data">
+        {{-- SỬA: Thêm /admin vào action --}}
+        <form action="/admin/category/store" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label fw-bold">Tên Danh mục</label>
+                {{-- Giữ nguyên name="tendanhmuc" để khớp với Controller --}}
                 <input type="text" class="form-control" name="tendanhmuc" placeholder="Ví dụ: TF, FG,..." required>
             </div>
             
@@ -28,9 +30,12 @@
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Lưu Danh mục
+                    <i class="bi bi-check-circle"></i> Lưu lại
                 </button>
-                <a href="/category" class="btn btn-secondary">Quay lại</a>
+                {{-- SỬA: Nút Hủy về trang admin --}}
+                <a href="/admin/category" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </a>
             </div>
         </form>
     </div>

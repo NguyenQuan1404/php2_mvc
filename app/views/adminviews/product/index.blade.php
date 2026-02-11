@@ -6,7 +6,8 @@
 <div class="card shadow">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Quản lý Sản phẩm</h4>
-        <a href="/product/create" class="btn btn-light btn-sm fw-bold">
+        {{-- LINK: /admin/product/create --}}
+        <a href="/admin/product/create" class="btn btn-light btn-sm fw-bold">
             <i class="bi bi-plus-circle"></i> Thêm Sản phẩm
         </a>
     </div>
@@ -32,18 +33,20 @@
                         <td class="text-center">{{ $p['id'] }}</td>
                         <td class="text-center">
                             @if($p['image'])
-                                <img src="/uploads/products/{{ $p['image'] }}" class="img-thumb border">
+                                <img src="/uploads/products/{{ $p['image'] }}" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
                             @else
                                 <span class="badge bg-secondary">No Image</span>
                             @endif
                         </td>
-                        <td class="fw-bold">{{ $p['name'] }}</td>
-                        <td>{{ $p['category_name'] }}</td>
-                        <td>{{ $p['brand_name'] }}</td>
-                        <td>
-                            <span class="text-danger fw-bold">{{ number_format($p['price']) }}đ</span>
+                        <td class="fw-semibold text-primary">{{ $p['name'] }}</td>
+                        <td><span class="badge bg-info text-dark">{{ $p['category_name'] ?? 'N/A' }}</span></td>
+                        <td><small class="text-muted">{{ $p['brand_name'] ?? 'N/A' }}</small></td>
+                        <td class="text-danger fw-bold">
                             @if($p['sale_price'] > 0)
-                                <br><small class="text-muted"><del>{{ number_format($p['sale_price']) }}đ</del></small>
+                                {{ number_format($p['sale_price']) }}đ
+                                <br><small class="text-muted text-decoration-line-through">{{ number_format($p['price']) }}đ</small>
+                            @else
+                                {{ number_format($p['price']) }}đ
                             @endif
                         </td>
                         <td class="text-center">{{ $p['quantity'] }}</td>
@@ -55,10 +58,12 @@
                             @endif
                         </td>
                         <td class="text-center">
-                            <a href="/product/edit/{{ $p['id'] }}" class="btn btn-warning btn-sm">
+                            {{-- LINK: /admin/product/edit --}}
+                            <a href="/admin/product/edit/{{ $p['id'] }}" class="btn btn-warning btn-sm">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
-                            <form action="/product/delete/{{ $p['id'] }}" method="POST" class="d-inline" onsubmit="return confirmDelete();">
+                            {{-- ACTION: /admin/product/delete --}}
+                            <form action="/admin/product/delete/{{ $p['id'] }}" method="POST" class="d-inline" onsubmit="return confirmDelete();">
                                 <button class="btn btn-danger btn-sm">
                                     <i class="bi bi-trash"></i>
                                 </button>

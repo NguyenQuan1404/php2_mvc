@@ -8,7 +8,8 @@
         <h4 class="mb-0">Cập nhật Mã: {{ $coupon['code'] }}</h4>
     </div>
     <div class="card-body">
-        <form action="/coupon/update/{{ $coupon['id'] }}" method="POST">
+        {{-- SỬA ACTION: /admin/coupon/update --}}
+        <form action="/admin/coupon/update/{{ $coupon['id'] }}" method="POST">
             
             <div class="row mb-3">
                 <div class="col-md-6">
@@ -31,7 +32,10 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Giá trị giảm</label>
-                    <input type="number" class="form-control" name="value" value="{{ (int)$coupon['value'] }}" required min="0">
+                    <div class="input-group">
+                        <input type="number" class="form-control" name="value" value="{{ (int)$coupon['value'] }}" required min="1">
+                        <span class="input-group-text" id="valueHint">{{ $coupon['type'] == 'percent' ? '%' : 'VND' }}</span>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Đơn hàng tối thiểu</label>
@@ -57,9 +61,21 @@
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-warning"><i class="bi bi-save"></i> Cập nhật</button>
-                <a href="/coupon" class="btn btn-secondary">Hủy bỏ</a>
+                {{-- SỬA LINK: /admin/coupon --}}
+                <a href="/admin/coupon" class="btn btn-secondary">Hủy bỏ</a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.getElementById('discountType').addEventListener('change', function() {
+        const hint = document.getElementById('valueHint');
+        if(this.value === 'percent') {
+            hint.textContent = '%';
+        } else {
+            hint.textContent = 'VND';
+        }
+    });
+</script>
 @endsection
