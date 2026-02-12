@@ -5,10 +5,10 @@ use Controller;
 
 class ProductController extends Controller
 {
-    // URL: /product (Trang danh sách tất cả sản phẩm)
+    // URL: /product (Trang danh sách)
     public function index()
     {
-        // --- FIX LỖI CACHE TỰ ĐỘNG (Giống Admin) ---
+        // Fix cache tự động
         $cachePath = __DIR__ . '/../../storage/cache'; 
         if (is_dir($cachePath)) {
             $files = glob($cachePath . '/*'); 
@@ -16,17 +16,13 @@ class ProductController extends Controller
                 if(is_file($file)) @unlink($file); 
             }
         }
-        // -------------------------------------------
 
         $productModel = $this->model('Product');
         $categoryModel = $this->model('Category');
 
-        // Lấy danh sách sản phẩm active
         $products = $productModel->getActiveProducts();
-        // Lấy danh mục để hiển thị lọc (nếu cần)
         $categories = $categoryModel->index();
 
-        // Trả về view danh sách
         $this->view('clientviews.product.index', [
             'products' => $products,
             'categories' => $categories,
@@ -34,33 +30,125 @@ class ProductController extends Controller
         ]);
     }
 
-    // URL: /product/detail/{id} (Trang chi tiết sản phẩm)
+    // URL: /product/detail/{id}
     public function detail($id)
     {
         $productModel = $this->model('Product');
         $variantModel = $this->model('ProductVariant');
 
-        // 1. Lấy thông tin sản phẩm (đã join bảng brand, category)
+        // 1. Lấy thông tin sản phẩm
         $product = $productModel->getDetail($id);
 
-        // Nếu không tìm thấy hoặc sản phẩm bị ẩn (status=0) -> Báo lỗi
         if (!$product) {
-            $this->notFound("Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.");
+            $this->notFound("Sản phẩm không tồn tại.");
             return;
         }
 
-        // 2. Lấy danh sách biến thể (Size, Màu, Ảnh riêng)
-        $variants = $variantModel->getByProductId($id);
+        // --- LOGIC SẢN PHẨM ĐÃ XEM (RECENTLY VIEWED) ---
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        if (!isset($_SESSION['recently_viewed'])) {
+            $_SESSION['recently_viewed'] = [];
+        }
 
-        // 3. Lấy sản phẩm liên quan (Cùng danh mục)
+        // Xóa ID nếu đã tồn tại để đưa lên đầu danh sách
+        if (($key = array_search($id, $_SESSION['recently_viewed'])) !== false) {
+            unset($_SESSION['recently_viewed'][$key]);
+        }
+        
+        // Thêm vào đầu mảng
+        array_unshift($_SESSION['recently_viewed'], $id);
+        
+        // Chỉ giữ lại 5 sản phẩm gần nhất
+        if (count($_SESSION['recently_viewed']) > 5) {
+            array_pop($_SESSION['recently_viewed']);
+        }
+
+        // Lấy danh sách sản phẩm đã xem (trừ sản phẩm đang xem hiện tại)
+        $recentIds = array_filter($_SESSION['recently_viewed'], function($val) use ($id) {
+            return $val != $id;
+        });
+        
+        $recentProducts = [];
+        if (!empty($recentIds)) {
+            $recentProducts = $productModel->getListByIds($recentIds);
+        }
+        // ------------------------------------------------
+
+        // 2. Lấy biến thể & sản phẩm liên quan
+        $variants = $variantModel->getByProductId($id);
         $relatedProducts = $productModel->getRelatedProducts($product['category_id'], $id);
 
-        // 4. Trả về View chi tiết
         $this->view('clientviews.product.detail', [
             'product' => $product,
             'variants' => $variants,
             'relatedProducts' => $relatedProducts,
-            'title' => $product['name'] . ' - Vua Bóng Đá'
+            'recentProducts' => $recentProducts, // Truyền biến này sang view
+            'title' => $product['name']
         ]);
+    }
+
+    // --- LOGIC SO SÁNH SẢN PHẨM (COMPARE) ---
+
+    // 1. Trang hiển thị bảng so sánh
+    public function compare()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        $compareIds = $_SESSION['compare'] ?? [];
+        $products = [];
+
+        if (!empty($compareIds)) {
+            $productModel = $this->model('Product');
+            $products = $productModel->getListByIds($compareIds);
+        }
+
+        $this->view('clientviews.product.compare', [
+            'products' => $products,
+            'title' => 'So sánh sản phẩm'
+        ]);
+    }
+
+    // 2. Thêm sản phẩm vào so sánh
+    public function addCompare($id)
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (!isset($_SESSION['compare'])) {
+            $_SESSION['compare'] = [];
+        }
+
+        // Kiểm tra xem đã có chưa
+        if (!in_array($id, $_SESSION['compare'])) {
+            // Giới hạn so sánh tối đa 3 sản phẩm
+            if (count($_SESSION['compare']) >= 3) {
+                // Xóa sản phẩm đầu tiên (cũ nhất) đi
+                array_shift($_SESSION['compare']);
+            }
+            $_SESSION['compare'][] = $id;
+        }
+
+        // Quay lại trang trước đó
+        if (isset($_SERVER['HTTP_REFERER'])) {
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+        } else {
+            header('Location: /products');
+        }
+        exit;
+    }
+
+    // 3. Xóa sản phẩm khỏi so sánh
+    public function removeCompare($id)
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (isset($_SESSION['compare'])) {
+            if (($key = array_search($id, $_SESSION['compare'])) !== false) {
+                unset($_SESSION['compare'][$key]);
+            }
+        }
+
+        header('Location: /product/compare');
+        exit;
     }
 }

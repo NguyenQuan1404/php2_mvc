@@ -14,7 +14,7 @@
     </nav>
 
     <div class="row g-5">
-        <!-- Cột Ảnh Sản Phẩm -->
+        <!-- Cột Ảnh Sản Phẩm (Bên trái) -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm">
                 <!-- Ảnh Chính -->
@@ -51,7 +51,7 @@
             </div>
         </div>
 
-        <!-- Cột Thông Tin -->
+        <!-- Cột Thông Tin (Bên phải) -->
         <div class="col-md-6">
             <h5 class="text-uppercase text-muted small fw-bold">{{ $product['brand_name'] ?? 'Thương hiệu khác' }}</h5>
             <h1 class="fw-bold mb-3">{{ $product['name'] }}</h1>
@@ -71,14 +71,14 @@
                 {{ $product['short_description'] ?? 'Sản phẩm chất lượng cao, thiết kế hiện đại...' }}
             </p>
 
-            <!-- Form Thêm vào giỏ (Sẽ xử lý sau) -->
-            <form action="/cart/add" method="POST">
+            <!-- Form Thêm vào giỏ -->
+            <form action="/cart/add" method="POST" class="mb-4">
                 <input type="hidden" name="product_id" value="{{ $product['id'] }}">
                 
                 @if(!empty($variants) && count($variants) > 0)
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Chọn Phân loại (Màu - Size):</label>
-                        <select class="form-select" name="variant_id" required>
+                        <select class="form-select" name="variant_id" id="variantSelect" required>
                             <option value="">-- Chọn Size & Màu --</option>
                             @foreach($variants as $v)
                                 <option value="{{ $v['id'] }}" data-img="{{ $v['image'] }}">
@@ -89,7 +89,7 @@
                     </div>
                 @endif
 
-                <div class="d-flex gap-3 align-items-center mb-4">
+                <div class="d-flex gap-3 align-items-center">
                     <div class="input-group" style="width: 140px;">
                         <button class="btn btn-outline-secondary" type="button" onclick="decrementQty()">-</button>
                         <input type="text" class="form-control text-center" name="quantity" id="qtyInput" value="1" readonly>
@@ -97,7 +97,7 @@
                     </div>
                     
                     @if($product['quantity'] > 0)
-                        <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                        <button type="submit" class="btn btn-success btn-lg flex-grow-1 shadow-sm">
                             <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ
                         </button>
                     @else
@@ -108,16 +108,15 @@
                 </div>
             </form>
 
-            <hr>
-            <div class="d-flex gap-3 text-muted small">
+            <div class="d-flex gap-3 text-muted small mt-4">
                 <span><i class="bi bi-check-circle-fill text-success me-1"></i> Chính hãng 100%</span>
-                <span><i class="bi bi-arrow-repeat text-success me-1"></i> Đổi trả 7 ngày</span>
                 <span><i class="bi bi-truck text-success me-1"></i> Giao hàng toàn quốc</span>
+                <span><i class="bi bi-arrow-repeat text-success me-1"></i> Đổi trả dễ dàng</span>
             </div>
         </div>
     </div>
 
-    <!-- Tabs Mô tả & Đánh giá -->
+    <!-- Tabs Chi tiết (Mô tả, Thông số, Chính sách) -->
     <div class="row mt-5">
         <div class="col-12">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -125,21 +124,84 @@
                     <button class="nav-link active fw-bold" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc-pane" type="button">Mô tả chi tiết</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold" id="policy-tab" data-bs-toggle="tab" data-bs-target="#policy-pane" type="button">Chính sách bảo hành</button>
+                    <button class="nav-link fw-bold" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs-pane" type="button">Thông số kỹ thuật</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="policy-tab" data-bs-toggle="tab" data-bs-target="#policy-pane" type="button">Chính sách & Lời khuyên</button>
                 </li>
             </ul>
-            <div class="tab-content border border-top-0 p-4 bg-white shadow-sm" id="myTabContent">
+            
+            <div class="tab-content border border-top-0 p-4 bg-white shadow-sm rounded-bottom" id="myTabContent">
+                <!-- Tab 1: Mô tả -->
                 <div class="tab-pane fade show active" id="desc-pane">
-                    <div class="product-description">
+                    <div class="product-description text-justify">
                         @if(!empty($product['description']))
                             {!! nl2br($product['description']) !!}
                         @else
-                            <p class="text-muted">Chưa có mô tả chi tiết cho sản phẩm này.</p>
+                            <p class="text-muted fst-italic">Chưa có mô tả chi tiết cho sản phẩm này.</p>
                         @endif
                     </div>
                 </div>
+
+                <!-- Tab 2: Thông số (Placeholder) -->
+                <div class="tab-pane fade" id="specs-pane">
+                    <table class="table table-striped w-50">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Thương hiệu</th>
+                                <td>{{ $product['brand_name'] ?? 'Đang cập nhật' }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Loại đế</th>
+                                <td>{{ $product['category_name'] ?? 'Đang cập nhật' }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Chất liệu</th>
+                                <td>Da tổng hợp cao cấp</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Xuất xứ</th>
+                                <td>Chính hãng</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tab 3: Chính sách & Lời khuyên (Dữ liệu cứng) -->
                 <div class="tab-pane fade" id="policy-pane">
-                    <p>Bảo hành chính hãng 12 tháng. Hỗ trợ đổi size nếu không vừa trong vòng 7 ngày (giày chưa qua sử dụng).</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="bi bi-lightbulb-fill text-warning fs-4 me-3 mt-1"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-2 text-dark">Lời khuyên chọn size</h5>
+                                    <p class="text-muted text-justify">
+                                        Đối với giày đá bóng, form giày thường ôm sát chân hơn giày đi chơi. 
+                                        Chúng tôi khuyên bạn nên:
+                                    </p>
+                                    <ul class="text-muted ps-3">
+                                        <li>Chọn lớn hơn <strong>0.5 - 1 size</strong> so với giày sneaker thông thường.</li>
+                                        <li>Nếu chân bạn thuộc dạng <strong>bè ngang (chân to bề ngang)</strong>, hãy ưu tiên các dòng giày Wide Fit hoặc chọn lớn hơn 1 size.</li>
+                                        <li>Nên mang tất thi đấu khi đo chân hoặc thử giày để có cảm giác chính xác nhất.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 border-start">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-shield-check text-success fs-4 me-3 mt-1"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-2 text-dark">Chính sách bảo hành & Đổi trả</h5>
+                                    <ul class="text-muted ps-3 mb-0">
+                                        <li class="mb-2"><strong>Bảo hành keo trọn đời:</strong> Hỗ trợ dán keo miễn phí bất kể thời gian sử dụng.</li>
+                                        <li class="mb-2"><strong>Bảo hành đế 12 tháng:</strong> 1 đổi 1 nếu gãy đế do lỗi nhà sản xuất.</li>
+                                        <li class="mb-2"><strong>Đổi size miễn phí:</strong> Trong vòng 7 ngày kể từ khi nhận hàng (Yêu cầu: Giày sạch, chưa qua sử dụng, còn nguyên hộp/tem).</li>
+                                        <li class="mb-2"><strong>Cam kết chính hãng:</strong> Hoàn tiền 100% và đền bù gấp 10 lần nếu phát hiện hàng giả (Fake).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -148,7 +210,11 @@
     <!-- Sản phẩm liên quan -->
     @if(!empty($relatedProducts))
     <div class="mt-5">
-        <h3 class="fw-bold mb-4">Sản phẩm liên quan</h3>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-uppercase mb-0">Sản phẩm liên quan</h3>
+            <a href="/products" class="btn btn-outline-dark rounded-pill btn-sm px-4">Xem tất cả</a>
+        </div>
+        
         <div class="row row-cols-1 row-cols-md-4 g-4">
             @foreach($relatedProducts as $rel)
             <div class="col">
@@ -200,5 +266,25 @@
             input.value = val - 1;
         }
     }
+
+    // Logic đổi ảnh theo biến thể
+    document.addEventListener('DOMContentLoaded', function() {
+        const variantSelect = document.getElementById('variantSelect');
+        const mainImage = document.getElementById('mainImage');
+        const originalSrc = mainImage.src;
+
+        if (variantSelect) {
+            variantSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const imgName = selectedOption.getAttribute('data-img');
+
+                if (imgName && imgName.trim() !== '') {
+                    mainImage.src = '/uploads/products/' + imgName;
+                } else {
+                    mainImage.src = originalSrc;
+                }
+            });
+        }
+    });
 </script>
 @endsection
