@@ -209,7 +209,7 @@
 
     <!-- Sản phẩm liên quan -->
     @if(!empty($relatedProducts))
-    <div class="mt-5">
+    <div class="mt-5 pt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-uppercase mb-0">Sản phẩm liên quan</h3>
             <a href="/products" class="btn btn-outline-dark rounded-pill btn-sm px-4">Xem tất cả</a>
@@ -219,17 +219,17 @@
             @foreach($relatedProducts as $rel)
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm product-card">
-                    <div class="position-relative">
-                        <img src="/uploads/products/{{ $rel['image'] }}" class="card-img-top" alt="{{ $rel['name'] }}">
+                    <div class="position-relative p-2 bg-light">
+                        <img src="/uploads/products/{{ $rel['image'] }}" class="card-img-top" style="height: 200px; object-fit: contain;" alt="{{ $rel['name'] }}">
                         @if($rel['sale_price'] > 0)
                             <span class="badge bg-danger position-absolute top-0 start-0 m-2">-{{ round((($rel['price'] - $rel['sale_price']) / $rel['price']) * 100) }}%</span>
                         @endif
                     </div>
-                    <div class="card-body">
-                        <h6 class="card-title mb-1 text-truncate">
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title mb-2 text-truncate">
                             <a href="/product/detail/{{ $rel['id'] }}" class="text-decoration-none text-dark stretched-link">{{ $rel['name'] }}</a>
                         </h6>
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 mt-auto">
                             @if($rel['sale_price'] > 0)
                                 <span class="fw-bold text-danger">{{ number_format($rel['sale_price']) }}đ</span>
                                 <small class="text-decoration-line-through text-muted">{{ number_format($rel['price']) }}đ</small>
@@ -244,7 +244,37 @@
         </div>
     </div>
     @endif
-</div>
+
+    <!-- SẢN PHẨM ĐÃ XEM GẦN ĐÂY NẰM GỌN TRONG CONTAINER -->
+    @if(isset($recentProducts) && count($recentProducts) > 0)
+    <div class="mt-5 pt-5 border-top">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-uppercase mb-0"><i class="fas fa-history text-secondary me-2"></i>Sản phẩm đã xem</h3>
+        </div>
+        
+        <div class="row row-cols-2 row-cols-md-5 g-4">
+            @foreach($recentProducts as $item)
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm product-card">
+                    <div class="position-relative overflow-hidden p-2 text-center bg-light">
+                        <a href="/product/detail/{{ $item['id'] }}">
+                            <img src="/uploads/products/{{ $item['image'] }}" class="img-fluid" style="height: 150px; object-fit: contain;" alt="{{ $item['name'] }}">
+                        </a>
+                    </div>
+                    <div class="card-body p-3 text-center d-flex flex-column">
+                        <h6 class="card-title text-truncate mb-2" style="font-size: 0.9rem;">
+                            <a href="/product/detail/{{ $item['id'] }}" class="text-dark text-decoration-none">{{ $item['name'] }}</a>
+                        </h6>
+                        <span class="text-danger fw-bold mt-auto">{{ number_format($item['price'], 0, ',', '.') }}đ</span>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+</div> <!-- Đóng thẻ container -->
 
 <script>
     // Hàm đổi ảnh chính khi click ảnh nhỏ
@@ -287,4 +317,14 @@
         }
     });
 </script>
+
+<style>
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
 @endsection

@@ -8,7 +8,6 @@ class ProductController extends Controller
     // URL: /product (Trang danh sách)
     public function index()
     {
-        // Fix cache tự động
         $cachePath = __DIR__ . '/../../storage/cache'; 
         if (is_dir($cachePath)) {
             $files = glob($cachePath . '/*'); 
@@ -19,13 +18,33 @@ class ProductController extends Controller
 
         $productModel = $this->model('Product');
         $categoryModel = $this->model('Category');
+        $brandModel = $this->model('Brand');
 
-        $products = $productModel->getActiveProducts();
-        $categories = $categoryModel->index();
+        $filters = [
+            'keyword' => $_GET['keyword'] ?? '',
+            'category_id' => $_GET['category'] ?? '',
+            'brand_id' => $_GET['brand'] ?? '',
+            'min_price' => $_GET['min_price'] ?? '',
+            'max_price' => $_GET['max_price'] ?? '',
+            'sort' => $_GET['sort'] ?? 'newest'
+        ];
+
+        if (method_exists($productModel, 'getFilteredProducts')) {
+            $products = $productModel->getFilteredProducts($filters);
+        } elseif (method_exists($productModel, 'getActiveProducts')) {
+            $products = $productModel->getActiveProducts(); 
+        } else {
+            $products = $productModel->index();
+        }
+        
+        $categories = method_exists($categoryModel, 'index') ? $categoryModel->index() : []; 
+        $brands = method_exists($brandModel, 'index') ? $brandModel->index() : [];
 
         $this->view('clientviews.product.index', [
             'products' => $products,
             'categories' => $categories,
+            'brands' => $brands,
+            'filters' => $filters,
             'title' => 'Tất cả sản phẩm - Vua Bóng Đá'
         ]);
     }
@@ -36,7 +55,6 @@ class ProductController extends Controller
         $productModel = $this->model('Product');
         $variantModel = $this->model('ProductVariant');
 
-        // 1. Lấy thông tin sản phẩm
         $product = $productModel->getDetail($id);
 
         if (!$product) {
@@ -44,27 +62,22 @@ class ProductController extends Controller
             return;
         }
 
-        // --- LOGIC SẢN PHẨM ĐÃ XEM (RECENTLY VIEWED) ---
         if (session_status() === PHP_SESSION_NONE) session_start();
         
         if (!isset($_SESSION['recently_viewed'])) {
             $_SESSION['recently_viewed'] = [];
         }
 
-        // Xóa ID nếu đã tồn tại để đưa lên đầu danh sách
         if (($key = array_search($id, $_SESSION['recently_viewed'])) !== false) {
             unset($_SESSION['recently_viewed'][$key]);
         }
         
-        // Thêm vào đầu mảng
         array_unshift($_SESSION['recently_viewed'], $id);
         
-        // Chỉ giữ lại 5 sản phẩm gần nhất
         if (count($_SESSION['recently_viewed']) > 5) {
             array_pop($_SESSION['recently_viewed']);
         }
 
-        // Lấy danh sách sản phẩm đã xem (trừ sản phẩm đang xem hiện tại)
         $recentIds = array_filter($_SESSION['recently_viewed'], function($val) use ($id) {
             return $val != $id;
         });
@@ -73,9 +86,7 @@ class ProductController extends Controller
         if (!empty($recentIds)) {
             $recentProducts = $productModel->getListByIds($recentIds);
         }
-        // ------------------------------------------------
 
-        // 2. Lấy biến thể & sản phẩm liên quan
         $variants = $variantModel->getByProductId($id);
         $relatedProducts = $productModel->getRelatedProducts($product['category_id'], $id);
 
@@ -83,14 +94,12 @@ class ProductController extends Controller
             'product' => $product,
             'variants' => $variants,
             'relatedProducts' => $relatedProducts,
-            'recentProducts' => $recentProducts, // Truyền biến này sang view
+            'recentProducts' => $recentProducts,
             'title' => $product['name']
         ]);
     }
 
     // --- LOGIC SO SÁNH SẢN PHẨM (COMPARE) ---
-
-    // 1. Trang hiển thị bảng so sánh
     public function compare()
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -109,35 +118,27 @@ class ProductController extends Controller
         ]);
     }
 
-    // 2. Thêm sản phẩm vào so sánh
     public function addCompare($id)
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
 
-        if (!isset($_SESSION['compare'])) {
-            $_SESSION['compare'] = [];
-        }
+        if (!isset($_SESSION['compare'])) $_SESSION['compare'] = [];
 
-        // Kiểm tra xem đã có chưa
         if (!in_array($id, $_SESSION['compare'])) {
-            // Giới hạn so sánh tối đa 3 sản phẩm
             if (count($_SESSION['compare']) >= 3) {
-                // Xóa sản phẩm đầu tiên (cũ nhất) đi
                 array_shift($_SESSION['compare']);
             }
             $_SESSION['compare'][] = $id;
+            $_SESSION['success'] = "Đã thêm sản phẩm vào danh sách so sánh!";
+        } else {
+            $_SESSION['error'] = "Sản phẩm đã có trong danh sách so sánh!";
         }
 
-        // Quay lại trang trước đó
-        if (isset($_SERVER['HTTP_REFERER'])) {
-            header('Location: ' . $_SERVER['HTTP_REFERER']);
-        } else {
-            header('Location: /products');
-        }
+        if (isset($_SERVER['HTTP_REFERER'])) header('Location: ' . $_SERVER['HTTP_REFERER']);
+        else header('Location: /product');
         exit;
     }
 
-    // 3. Xóa sản phẩm khỏi so sánh
     public function removeCompare($id)
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -145,10 +146,64 @@ class ProductController extends Controller
         if (isset($_SESSION['compare'])) {
             if (($key = array_search($id, $_SESSION['compare'])) !== false) {
                 unset($_SESSION['compare'][$key]);
+                $_SESSION['success'] = "Đã xóa khỏi danh sách so sánh!";
             }
         }
 
         header('Location: /product/compare');
+        exit;
+    }
+
+    // --- LOGIC YÊU THÍCH SẢN PHẨM (WISHLIST) ---
+    public function wishlist()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        $wishlistIds = $_SESSION['wishlist'] ?? [];
+        $products = [];
+
+        if (!empty($wishlistIds)) {
+            $productModel = $this->model('Product');
+            $products = $productModel->getListByIds($wishlistIds);
+        }
+
+        $this->view('clientviews.product.wishlist', [
+            'products' => $products,
+            'title' => 'Sản phẩm yêu thích'
+        ]);
+    }
+
+    public function addWishlist($id)
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (!isset($_SESSION['wishlist'])) $_SESSION['wishlist'] = [];
+
+        if (!in_array($id, $_SESSION['wishlist'])) {
+            $_SESSION['wishlist'][] = $id;
+            $_SESSION['success'] = "Đã thêm vào danh sách yêu thích <i class='fas fa-heart text-danger'></i>";
+        } else {
+            $_SESSION['error'] = "Sản phẩm này đã có trong danh sách yêu thích của bạn rồi!";
+        }
+
+        if (isset($_SERVER['HTTP_REFERER'])) header('Location: ' . $_SERVER['HTTP_REFERER']);
+        else header('Location: /product');
+        exit;
+    }
+
+    public function removeWishlist($id)
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (isset($_SESSION['wishlist'])) {
+            if (($key = array_search($id, $_SESSION['wishlist'])) !== false) {
+                unset($_SESSION['wishlist'][$key]);
+                $_SESSION['success'] = "Đã bỏ yêu thích sản phẩm!";
+            }
+        }
+
+        if (isset($_SERVER['HTTP_REFERER'])) header('Location: ' . $_SERVER['HTTP_REFERER']);
+        else header('Location: /product/wishlist');
         exit;
     }
 }

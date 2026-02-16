@@ -107,41 +107,41 @@
     <div class="row g-3">
         <!-- Nếu có dữ liệu categories từ Controller -->
         @foreach($categories as $cate)
-            <div class="col-6 col-md-3">
-                {{-- Link vào danh mục (nếu đã làm trang danh mục) --}}
-                <a href="#" class="text-decoration-none">
-                    <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
-                         @if(!empty($cate['image']))
-                            <img src="/uploads/categories/{{ $cate['image'] }}" class="card-img opacity-75" alt="{{ $cate['name'] }}" style="height: 250px; object-fit: cover;">
-                        @else
-                            <!-- Placeholder nếu không có ảnh -->
-                             <div style="height: 250px; background-color: #333;" class="d-flex align-items-center justify-content-center">
-                                <i class="fas fa-shoe-prints fa-3x text-secondary"></i>
-                             </div>
-                        @endif
-                        <div class="card-img-overlay d-flex flex-column justify-content-end p-4 gradient-overlay">
-                            <h5 class="card-title fw-bold text-uppercase mb-0">{{ $cate['name'] }}</h5>
-                            <small class="text-warning"><i class="fas fa-arrow-right"></i> Mua ngay</small>
-                        </div>
+        <div class="col-6 col-md-3">
+            {{-- Link vào danh mục (nếu đã làm trang danh mục) --}}
+            <a href="#" class="text-decoration-none">
+                <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
+                    @if(!empty($cate['image']))
+                    <img src="/uploads/categories/{{ $cate['image'] }}" class="card-img opacity-75" alt="{{ $cate['name'] }}" style="height: 250px; object-fit: cover;">
+                    @else
+                    <!-- Placeholder nếu không có ảnh -->
+                    <div style="height: 250px; background-color: #333;" class="d-flex align-items-center justify-content-center">
+                        <i class="fas fa-shoe-prints fa-3x text-secondary"></i>
                     </div>
-                </a>
-            </div>
+                    @endif
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-4 gradient-overlay">
+                        <h5 class="card-title fw-bold text-uppercase mb-0">{{ $cate['name'] }}</h5>
+                        <small class="text-warning"><i class="fas fa-arrow-right"></i> Mua ngay</small>
+                    </div>
+                </div>
+            </a>
+        </div>
         @endforeach
-        
+
         <!-- Nếu ít category quá, hiển thị thêm placeholder cho đẹp -->
         @if(count($categories) < 4)
             <div class="col-6 col-md-3">
-                <a href="#" class="text-decoration-none">
-                    <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
-                        <img src="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?q=80&w=1949&auto=format&fit=crop" class="card-img opacity-75" style="height: 250px; object-fit: cover;">
-                        <div class="card-img-overlay d-flex flex-column justify-content-end p-4 gradient-overlay">
-                            <h5 class="card-title fw-bold text-uppercase mb-0">Phụ Kiện</h5>
-                            <small class="text-warning"><i class="fas fa-arrow-right"></i> Mua ngay</small>
-                        </div>
+            <a href="#" class="text-decoration-none">
+                <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
+                    <img src="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?q=80&w=1949&auto=format&fit=crop" class="card-img opacity-75" style="height: 250px; object-fit: cover;">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-4 gradient-overlay">
+                        <h5 class="card-title fw-bold text-uppercase mb-0">Phụ Kiện</h5>
+                        <small class="text-warning"><i class="fas fa-arrow-right"></i> Mua ngay</small>
                     </div>
-                </a>
-            </div>
-        @endif
+                </div>
+            </a>
+    </div>
+    @endif
     </div>
 </section>
 
@@ -152,7 +152,7 @@
             <h2 class="fw-bold text-uppercase mb-1">Sản Phẩm Mới</h2>
             <div class="bg-success rounded" style="width: 60px; height: 4px;"></div>
         </div>
-        
+
         <!-- Filter Tabs -->
         <ul class="nav nav-pills d-none d-md-flex">
             <li class="nav-item">
@@ -172,31 +172,32 @@
 
     <div class="row g-4">
         @forelse($products as $product)
-            <div class="col-6 col-md-4 col-lg-3">
-                <div class="card h-100 product-card bg-white shadow-sm position-relative">
-                    <!-- Sale Badge -->
-                    @if($product['sale_price'] > 0 && $product['sale_price'] < $product['price'])
-                        @php 
-                            $percent = round((($product['price'] - $product['sale_price']) / $product['price']) * 100); 
-                        @endphp
-                        <span class="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 m-2 small fw-bold rounded shadow-sm z-1">
-                            -{{ $percent }}%
-                        </span>
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card h-100 product-card bg-white shadow-sm position-relative">
+                <!-- Sale Badge -->
+                @if($product['sale_price'] > 0 && $product['sale_price'] < $product['price'])
+                    @php
+                    $percent=round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
+                    @endphp
+                    <span class="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 m-2 small fw-bold rounded shadow-sm z-1">
+                    -{{ $percent }}%
+                    </span>
                     @endif
 
-                    <!-- Wishlist Btn -->
-                    <button class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-2 p-2 z-1 text-secondary hover-danger">
+                    <!-- Wishlist Btn Đã Sửa -->
+                    <a href="/product/addWishlist/{{ $product['id'] }}" class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-2 p-2 z-1 text-secondary hover-danger">
                         <i class="far fa-heart"></i>
-                    </button>
+                    </a>
+
 
                     <!-- Image (Đã gắn link) -->
                     <div class="product-image-wrapper bg-light">
                         {{-- GẮN LINK VÀO ẢNH --}}
                         <a href="/product/detail/{{ $product['id'] }}">
                             @if($product['image'])
-                                <img src="/uploads/products/{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                            <img src="/uploads/products/{{ $product['image'] }}" alt="{{ $product['name'] }}">
                             @else
-                                <img src="https://placehold.co/600x600?text=No+Image" alt="No Image">
+                            <img src="https://placehold.co/600x600?text=No+Image" alt="No Image">
                             @endif
                         </a>
                     </div>
@@ -210,32 +211,32 @@
                             {{-- GẮN LINK VÀO TÊN SẢN PHẨM --}}
                             <a href="/product/detail/{{ $product['id'] }}" class="text-decoration-none text-dark stretched-link">{{ $product['name'] }}</a>
                         </h6>
-                        
+
                         <!-- Price -->
                         <div class="mt-auto pt-2">
                             @if($product['sale_price'] > 0)
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="fw-bold text-danger fs-5">{{ number_format($product['sale_price']) }}đ</span>
-                                    <span class="text-muted text-decoration-line-through small">{{ number_format($product['price']) }}đ</span>
-                                </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold text-danger fs-5">{{ number_format($product['sale_price']) }}đ</span>
+                                <span class="text-muted text-decoration-line-through small">{{ number_format($product['price']) }}đ</span>
+                            </div>
                             @else
-                                <span class="fw-bold text-dark fs-5">{{ number_format($product['price']) }}đ</span>
+                            <span class="fw-bold text-dark fs-5">{{ number_format($product['price']) }}đ</span>
                             @endif
                         </div>
-                        
+
                         <!-- Add to cart hover -->
                         {{-- Nút này cũng trỏ về chi tiết để chọn size --}}
                         <a href="/product/detail/{{ $product['id'] }}" class="btn btn-outline-success w-100 mt-3 rounded-pill fw-bold btn-sm">
                             <i class="fas fa-cart-plus me-1"></i> Thêm vào giỏ
                         </a>
                     </div>
-                </div>
             </div>
+        </div>
         @empty
-            <div class="col-12 text-center py-5">
-                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-50">
-                <p class="text-muted">Chưa có sản phẩm nào được bày bán.</p>
-            </div>
+        <div class="col-12 text-center py-5">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-50">
+            <p class="text-muted">Chưa có sản phẩm nào được bày bán.</p>
+        </div>
         @endforelse
     </div>
 
@@ -273,9 +274,21 @@
 
 @section('styles')
 <style>
-    .category-card { transition: transform 0.3s; cursor: pointer; }
-    .category-card:hover { transform: translateY(-5px); }
-    .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
-    .hover-danger:hover { color: #dc3545 !important; }
+    .category-card {
+        transition: transform 0.3s;
+        cursor: pointer;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .gradient-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    }
+
+    .hover-danger:hover {
+        color: #dc3545 !important;
+    }
 </style>
 @endsection
