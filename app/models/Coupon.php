@@ -96,4 +96,45 @@ class Coupon extends Model
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['count'] > 0;
     }
+
+    // --- CÁC HÀM BẮT BUỘC PHẢI CÓ CHO CLIENT ---
+
+    public function getValidCoupons() {
+        $today = date('Y-m-d');
+        // Logic: Status = 1 (Active) AND Ngày bắt đầu <= Hôm nay AND Ngày kết thúc >= Hôm nay AND Số lượng > 0
+        $sql = "SELECT * FROM $this->table 
+                WHERE status = 1 
+                AND start_date <= :today 
+                AND end_date >= :today 
+                AND quantity > 0
+                ORDER BY end_date ASC";
+        
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['today' => $today]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Tìm mã giảm giá theo code (Dùng cho Checkout)
+    public function findByCode($code) {
+        $today = date('Y-m-d');
+        $sql = "SELECT * FROM $this->table 
+                WHERE code = :code 
+                AND status = 1 
+                AND start_date <= :today 
+                AND end_date >= :today 
+                AND quantity > 0";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['code' => $code, 'today' => $today]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Trừ số lượng mã sau khi đặt hàng thành công
+    public function decreaseQuantity($code) {
+        $sql = "UPDATE $this->table SET quantity = quantity - 1 WHERE code = :code AND quantity > 0";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        return $stmt->execute(['code' => $code]);
+    }
 }

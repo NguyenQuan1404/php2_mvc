@@ -60,7 +60,68 @@
     </div>
 </section>
 
-<!-- 2. Features / Policies -->
+<!-- 2. COUPON BOX (ĐÃ FIX LỖI SYNTAX HIGHLIGHTING) -->
+@if(!empty($coupons) && count($coupons) > 0)
+<section class="container mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <i class="fas fa-ticket-alt fa-2x text-warning me-2"></i>
+        <h2 class="fw-bold text-uppercase mb-0">Mã Giảm Giá Hot</h2>
+    </div>
+
+    <div class="row g-3">
+        @foreach($coupons as $coupon)
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="coupon-card d-flex bg-white shadow-sm rounded overflow-hidden position-relative h-100 border border-light">
+                <!-- Phần Trái: Màu sắc & Giá trị -->
+                <div class="coupon-left bg-success text-white p-3 d-flex flex-column justify-content-center align-items-center text-center" style="min-width: 100px;">
+                    <div class="fw-bold fs-4">
+                        @if($coupon['type'] == 'fixed')
+                            {{ number_format($coupon['value'] / 1000) }}k
+                        @else
+                            {{ (int)$coupon['value'] }}%
+                        @endif
+                    </div>
+                    <small class="text-white-50">OFF</small>
+                    <div class="circle-notch top"></div>
+                    <div class="circle-notch bottom"></div>
+                </div>
+
+                <!-- Phần Phải: Thông tin & Nút Copy -->
+                <div class="coupon-right p-3 d-flex flex-column justify-content-between flex-grow-1">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <span class="badge bg-light text-dark border mb-1">HSD: {{ date('d/m/Y', strtotime($coupon['end_date'])) }}</span>
+                            <small class="text-muted">SL: {{ $coupon['quantity'] }}</small>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">
+                            Giảm {{ $coupon['type'] == 'fixed' ? number_format($coupon['value']).'đ' : (int)$coupon['value'].'%' }}
+                        </h6>
+                        <small class="text-muted d-block" style="font-size: 0.8rem;">
+                            Đơn tối thiểu {{ number_format($coupon['min_order_value']) }}đ
+                        </small>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control fw-bold text-success bg-light border-success" value="{{ $coupon['code'] }}" readonly>
+                            
+                            <!-- FIX LỖI ĐỎ: Dùng data-code và this.dataset.code -->
+                            <button class="btn btn-outline-success" type="button" 
+                                    data-code="{{ $coupon['code'] }}"
+                                    onclick="copyCode(this.dataset.code, this)">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</section>
+@endif
+
+<!-- 3. Features / Policies -->
 <section class="container mb-5">
     <div class="row g-4">
         <div class="col-md-3 col-6">
@@ -94,7 +155,7 @@
     </div>
 </section>
 
-<!-- 3. Featured Categories -->
+<!-- 4. Featured Categories -->
 <section class="container mb-5">
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
@@ -105,16 +166,13 @@
     </div>
 
     <div class="row g-3">
-        <!-- Nếu có dữ liệu categories từ Controller -->
         @foreach($categories as $cate)
         <div class="col-6 col-md-3">
-            {{-- Link vào danh mục (nếu đã làm trang danh mục) --}}
             <a href="#" class="text-decoration-none">
                 <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
                     @if(!empty($cate['image']))
                     <img src="/uploads/categories/{{ $cate['image'] }}" class="card-img opacity-75" alt="{{ $cate['name'] }}" style="height: 250px; object-fit: cover;">
                     @else
-                    <!-- Placeholder nếu không có ảnh -->
                     <div style="height: 250px; background-color: #333;" class="d-flex align-items-center justify-content-center">
                         <i class="fas fa-shoe-prints fa-3x text-secondary"></i>
                     </div>
@@ -128,9 +186,8 @@
         </div>
         @endforeach
 
-        <!-- Nếu ít category quá, hiển thị thêm placeholder cho đẹp -->
         @if(count($categories) < 4)
-            <div class="col-6 col-md-3">
+        <div class="col-6 col-md-3">
             <a href="#" class="text-decoration-none">
                 <div class="card bg-dark text-white border-0 overflow-hidden shadow-sm category-card">
                     <img src="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?q=80&w=1949&auto=format&fit=crop" class="card-img opacity-75" style="height: 250px; object-fit: cover;">
@@ -140,12 +197,12 @@
                     </div>
                 </div>
             </a>
-    </div>
-    @endif
+        </div>
+        @endif
     </div>
 </section>
 
-<!-- 4. Featured Products Grid -->
+<!-- 5. Featured Products Grid -->
 <section class="container mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -153,7 +210,6 @@
             <div class="bg-success rounded" style="width: 60px; height: 4px;"></div>
         </div>
 
-        <!-- Filter Tabs -->
         <ul class="nav nav-pills d-none d-md-flex">
             <li class="nav-item">
                 <a class="nav-link active rounded-pill bg-success" aria-current="page" href="#">Tất cả</a>
@@ -174,7 +230,6 @@
         @forelse($products as $product)
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card h-100 product-card bg-white shadow-sm position-relative">
-                <!-- Sale Badge -->
                 @if($product['sale_price'] > 0 && $product['sale_price'] < $product['price'])
                     @php
                     $percent=round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
@@ -182,54 +237,45 @@
                     <span class="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 m-2 small fw-bold rounded shadow-sm z-1">
                     -{{ $percent }}%
                     </span>
-                    @endif
+                @endif
 
-                    <!-- Wishlist Btn Đã Sửa -->
-                    <a href="/product/addWishlist/{{ $product['id'] }}" class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-2 p-2 z-1 text-secondary hover-danger">
-                        <i class="far fa-heart"></i>
+                <a href="/product/addWishlist/{{ $product['id'] }}" class="btn btn-light rounded-circle shadow-sm position-absolute top-0 end-0 m-2 p-2 z-1 text-secondary hover-danger">
+                    <i class="far fa-heart"></i>
+                </a>
+
+                <div class="product-image-wrapper bg-light">
+                    <a href="/product/detail/{{ $product['id'] }}">
+                        @if($product['image'])
+                        <img src="/uploads/products/{{ $product['image'] }}" alt="{{ $product['name'] }}">
+                        @else
+                        <img src="https://placehold.co/600x600?text=No+Image" alt="No Image">
+                        @endif
                     </a>
+                </div>
 
+                <div class="card-body p-3 d-flex flex-column">
+                    <small class="text-muted text-uppercase mb-1" style="font-size: 0.7rem;">
+                        {{ $product['category_name'] ?? 'Giày Bóng Đá' }} • {{ $product['brand_name'] ?? 'Chính Hãng' }}
+                    </small>
+                    <h6 class="card-title fw-bold text-dark mb-1 text-truncate">
+                        <a href="/product/detail/{{ $product['id'] }}" class="text-decoration-none text-dark stretched-link">{{ $product['name'] }}</a>
+                    </h6>
 
-                    <!-- Image (Đã gắn link) -->
-                    <div class="product-image-wrapper bg-light">
-                        {{-- GẮN LINK VÀO ẢNH --}}
-                        <a href="/product/detail/{{ $product['id'] }}">
-                            @if($product['image'])
-                            <img src="/uploads/products/{{ $product['image'] }}" alt="{{ $product['name'] }}">
-                            @else
-                            <img src="https://placehold.co/600x600?text=No+Image" alt="No Image">
-                            @endif
-                        </a>
-                    </div>
-
-                    <!-- Content -->
-                    <div class="card-body p-3 d-flex flex-column">
-                        <small class="text-muted text-uppercase mb-1" style="font-size: 0.7rem;">
-                            {{ $product['category_name'] ?? 'Giày Bóng Đá' }} • {{ $product['brand_name'] ?? 'Chính Hãng' }}
-                        </small>
-                        <h6 class="card-title fw-bold text-dark mb-1 text-truncate">
-                            {{-- GẮN LINK VÀO TÊN SẢN PHẨM --}}
-                            <a href="/product/detail/{{ $product['id'] }}" class="text-decoration-none text-dark stretched-link">{{ $product['name'] }}</a>
-                        </h6>
-
-                        <!-- Price -->
-                        <div class="mt-auto pt-2">
-                            @if($product['sale_price'] > 0)
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold text-danger fs-5">{{ number_format($product['sale_price']) }}đ</span>
-                                <span class="text-muted text-decoration-line-through small">{{ number_format($product['price']) }}đ</span>
-                            </div>
-                            @else
-                            <span class="fw-bold text-dark fs-5">{{ number_format($product['price']) }}đ</span>
-                            @endif
+                    <div class="mt-auto pt-2">
+                        @if($product['sale_price'] > 0)
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold text-danger fs-5">{{ number_format($product['sale_price']) }}đ</span>
+                            <span class="text-muted text-decoration-line-through small">{{ number_format($product['price']) }}đ</span>
                         </div>
-
-                        <!-- Add to cart hover -->
-                        {{-- Nút này cũng trỏ về chi tiết để chọn size --}}
-                        <a href="/product/detail/{{ $product['id'] }}" class="btn btn-outline-success w-100 mt-3 rounded-pill fw-bold btn-sm">
-                            <i class="fas fa-cart-plus me-1"></i> Thêm vào giỏ
-                        </a>
+                        @else
+                        <span class="fw-bold text-dark fs-5">{{ number_format($product['price']) }}đ</span>
+                        @endif
                     </div>
+
+                    <a href="/product/detail/{{ $product['id'] }}" class="btn btn-outline-success w-100 mt-3 rounded-pill fw-bold btn-sm">
+                        <i class="fas fa-cart-plus me-1"></i> Thêm vào giỏ
+                    </a>
+                </div>
             </div>
         </div>
         @empty
@@ -254,7 +300,7 @@
     </div>
 </section>
 
-<!-- 5. Newsletter -->
+<!-- 6. Newsletter -->
 <section class="bg-dark text-white py-5 mb-0">
     <div class="container text-center">
         <h3 class="fw-bold text-uppercase mb-2">Đăng ký nhận tin</h3>
@@ -274,21 +320,64 @@
 
 @section('styles')
 <style>
-    .category-card {
-        transition: transform 0.3s;
-        cursor: pointer;
+    /* CSS CHO COUPON CARD */
+    .coupon-card {
+        border-radius: 12px;
+        transition: transform 0.2s;
+        border: 1px solid rgba(0,0,0,0.05) !important;
     }
+    .coupon-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,0.1) !important;
+    }
+    .coupon-left {
+        position: relative;
+        border-right: 2px dashed rgba(255,255,255,0.5);
+    }
+    /* Tạo hình bán nguyệt cắt vào (Răng cưa vé) */
+    .circle-notch {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: #f8f9fa; /* Màu trùng background body */
+        border-radius: 50%;
+        right: -10px;
+        z-index: 10;
+    }
+    .circle-notch.top { top: -10px; }
+    .circle-notch.bottom { bottom: -10px; }
 
-    .category-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .gradient-overlay {
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-    }
-
-    .hover-danger:hover {
-        color: #dc3545 !important;
-    }
+    /* Các style cũ */
+    .category-card { transition: transform 0.3s; cursor: pointer; }
+    .category-card:hover { transform: translateY(-5px); }
+    .gradient-overlay { background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent); }
+    .hover-danger:hover { color: #dc3545 !important; }
 </style>
+@endsection
+
+@section('scripts')
+<script>
+    // Hàm Copy Code Chuẩn
+    function copyCode(code, btnElement) {
+        // Sử dụng API Clipboard hiện đại
+        navigator.clipboard.writeText(code).then(function() {
+            var originalHtml = btnElement.innerHTML;
+            
+            // Hiệu ứng đổi nút khi copy thành công
+            btnElement.innerHTML = '<i class="fas fa-check"></i> Đã lưu';
+            btnElement.classList.remove('btn-outline-success');
+            btnElement.classList.add('btn-success');
+            
+            // Reset lại nút sau 2 giây
+            setTimeout(function() {
+                btnElement.innerHTML = originalHtml;
+                btnElement.classList.add('btn-outline-success');
+                btnElement.classList.remove('btn-success');
+            }, 2000);
+        }, function(err) {
+            console.error('Không thể copy text: ', err);
+            alert('Lỗi: Không thể copy mã.');
+        });
+    }
+</script>
 @endsection

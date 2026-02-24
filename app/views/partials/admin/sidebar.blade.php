@@ -59,9 +59,9 @@
             </a>
         </li>
         <li class="nav-item mb-1">
-            <a href="#" class="nav-link text-white">
+            <a href="/admin/order/index" class="nav-link text-white">
                 <i class="fas fa-file-invoice-dollar me-3 icon-width"></i>
-                Đơn hàng <span class="badge bg-danger ms-auto rounded-pill" style="font-size: 0.7em;">Soon</span>
+                Đơn hàng
             </a>
         </li>
     </ul>

@@ -1,10 +1,17 @@
 <?php
-class User extends Model
-{
-    private $table = 'users';
+class User extends Model {
+    protected $table = 'users';
 
-    public function index()
-    {
+    // --- CÁC HÀM CƠ BẢN ---
+    public function find($id) {
+        $conn = $this->connect();
+        $stmt = $conn->prepare("SELECT * FROM users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Dùng cho Admin quản lý
+    public function index() {
         $sql = "SELECT * FROM $this->table ORDER BY id DESC";
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
@@ -12,22 +19,12 @@ class User extends Model
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function create($data)
-    {
+    public function create($data) {
         $sql = "INSERT INTO $this->table (fullname, email, password, phone, address, role) 
                 VALUES (:fullname, :email, :password, :phone, :address, :role)";
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
         return $stmt->execute($data);
-    }
-
-    public function show($id)
-    {
-        $sql = "SELECT * FROM $this->table WHERE id = :id";
-        $conn = $this->connect();
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function findByEmail($email) {
@@ -38,36 +35,57 @@ class User extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function update($id, $data)
-    {
-        // Build câu SQL động để xử lý mật khẩu
-        $passSql = !empty($data['password']) ? ", password = :password" : "";
-        
-        $sql = "UPDATE $this->table SET 
-                fullname = :fullname, 
-                phone = :phone, 
-                address = :address, 
-                role = :role 
-                $passSql
-                WHERE id = :id";
-                
+    // --- CÁC HÀM DÀNH CHO CLIENT PROFILE ---
+
+    // Cập nhật thông tin cá nhân
+    public function updateProfile($id, $data) {
         $conn = $this->connect();
+        $sql = "UPDATE users SET fullname = :fullname, phone = :phone, address = :address WHERE id = :id";
         $stmt = $conn->prepare($sql);
-        
-        $data['id'] = $id;
-        // Nếu không có password mới thì xóa key password khỏi mảng data để tránh lỗi SQL
-        if (empty($data['password'])) {
-            unset($data['password']); 
-        }
-        
-        return $stmt->execute($data);
+        return $stmt->execute([
+            ':fullname' => $data['fullname'],
+            ':phone' => $data['phone'],
+            ':address' => $data['address'],
+            ':id' => $id
+        ]);
     }
 
-    public function delete($id)
-    {
+    // Cập nhật mật khẩu
+    public function updatePassword($id, $newPasswordHash) {
+        $conn = $this->connect();
+        $stmt = $conn->prepare("UPDATE users SET password = :password WHERE id = :id");
+        return $stmt->execute([
+            ':password' => $newPasswordHash,
+            ':id' => $id
+        ]);
+    }
+
+    // Kiểm tra mật khẩu cũ (để đổi pass)
+    public function checkPassword($id, $passwordInput) {
+        $user = $this->find($id);
+        if ($user && password_verify($passwordInput, $user['password'])) {
+            return true;
+        }
+        return false;
+    }
+
+    // Admin Update (Hỗ trợ controller admin cũ)
+    public function update($id, $data) {
+        $passSql = !empty($data['password']) ? ", password = :password" : "";
+        $sql = "UPDATE $this->table SET fullname = :fullname, phone = :phone, address = :address, role = :role $passSql WHERE id = :id";
+        $conn = $this->connect();
+        $stmt = $conn->prepare($sql);
+        $data['id'] = $id;
+        if (empty($data['password'])) unset($data['password']); 
+        return $stmt->execute($data);
+    }
+    
+    public function delete($id) {
         $sql = "DELETE FROM $this->table WHERE id = :id";
         $conn = $this->connect();
         $stmt = $conn->prepare($sql);
         return $stmt->execute(['id' => $id]);
     }
+    
+    public function show($id) { return $this->find($id); }
 }

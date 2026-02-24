@@ -77,8 +77,8 @@
                             </li>
                             @endif
 
-                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2 text-muted"></i>Hồ sơ cá nhân</a></li>
-                            <li><a class="dropdown-item" href="/orders"><i class="fas fa-box-open me-2 text-muted"></i>Đơn hàng</a></li>
+                            <li><a class="dropdown-item" href="/user/profile"><i class="fas fa-user me-2 text-muted"></i>Hồ sơ cá nhân</a></li>
+                            <li><a class="dropdown-item" href="/myorder"><i class="fas fa-box-open me-2 text-muted"></i>Đơn hàng</a></li>
                             <li><a class="dropdown-item" href="/product/wishlist"><i class="fas fa-heart me-2 text-danger"></i>Yêu thích</a></li>
                             <li><a class="dropdown-item" href="/product/compare"><i class="fas fa-exchange-alt me-2 text-info"></i>So sánh</a></li>
                             <li>
